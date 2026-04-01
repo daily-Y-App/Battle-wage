@@ -3,254 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚔️ Battle Pro Arena</title>
+    <title>⚔️ Pro Battle Arena</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <style>
-        :root { --primary: #0f172a; --secondary: #ef4444; --accent: #22c55e; --bg: #f1f5f9; --card: #ffffff; }
+        :root { --primary: #1a2a6c; --secondary: #b21f1f; --accent: #22c55e; --bg: #f8fafc; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        body { background: var(--bg); padding-bottom: 90px; }
-        .content { padding: 15px; }
-        .card { background: var(--card); border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        .btn:active { transform: scale(0.98); }
-        .input-group { margin-bottom: 15px; text-align: left; }
-        .input-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        body { background: var(--bg); padding: 15px; color: #334155; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        h3 { margin-bottom: 15px; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 8px; }
         
-        /* Scanner UI */
-        #scanner-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        #reader { width: 90%; max-width: 400px; border-radius: 15px; overflow: hidden; border: 3px solid white; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        /* QR Area */
+        #qrcode { display: flex; justify-content: center; margin: 20px 0; padding: 15px; background: #fff; border-radius: 15px; border: 1px dashed #cbd5e1; }
+        .my-code-badge { background: #f1f5f9; padding: 8px 15px; border-radius: 10px; font-weight: bold; color: var(--primary); font-size: 18px; margin-bottom: 10px; }
+
+        /* Buttons */
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-scan { background: var(--secondary); color: white; }
+        .btn-gallery { background: #0f172a; color: white; }
+        .btn-battle { background: #2563eb; color: white; }
+        .btn:active { transform: scale(0.98); }
+
+        /* Scanner Overlay */
+        #scanner-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        #reader { width: 85%; max-width: 400px; border-radius: 20px; overflow: hidden; border: 4px solid white; }
 
         /* Battle UI */
-        .vs-area { font-size: 24px; font-weight: bold; display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
-        .progress-bar { height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden; margin-top: 10px; }
-        .progress-fill { height: 100%; background: linear-gradient(to right, #2563eb, var(--secondary)); width: 0%; transition: width 0.5s; }
+        #battlePage { display: none; }
+        .vs-card { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
+        .player-info { flex: 1; }
+        .player-wage { font-size: 22px; font-weight: bold; margin-top: 5px; }
+        .progress-container { height: 14px; background: #e2e8f0; border-radius: 7px; overflow: hidden; margin: 15px 0; }
+        .progress-bar { height: 100%; background: linear-gradient(to right, #2563eb, var(--secondary)); width: 50%; transition: width 0.5s; }
 
-        /* Chat UI */
-        .chat-box { height: 200px; overflow-y: auto; border: 1px solid #eee; background: #fafafa; padding: 10px; border-radius: 10px; margin-top: 10px; text-align: left; display: flex; flex-direction: column; gap: 5px; }
-        .msg { padding: 8px 12px; border-radius: 8px; font-size: 14px; max-width: 80%; }
-        .msg.me { background: #1a2a6c; color: white; align-self: flex-end; }
-        .msg.him { background: #fff; border: 1px solid #eee; color: #333; align-self: flex-start; }
+        /* Chat */
+        .chat-box { height: 250px; overflow-y: auto; background: #f1f5f9; border-radius: 15px; padding: 15px; display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
+        .msg { padding: 10px 14px; border-radius: 12px; font-size: 14px; max-width: 85%; word-wrap: break-word; }
+        .msg.me { background: var(--primary); color: white; align-self: flex-end; }
+        .msg.him { background: white; color: #334155; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* Notification */
-        #noti { position: fixed; top: 20px; right: 20px; background: var(--accent); color: white; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: none; animation: slideIn 0.3s; z-index: 11000; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-
-        /* Match History */
-        .history-item { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; font-size: 14px; }
-        .win { color: var(--accent); font-weight: bold; }
-        .lose { color: var(--secondary); font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 16px; outline: none; }
     </style>
 </head>
 <body>
 
-    <div id="noti">🔔 အသိပေးချက်</div>
+    <div id="homePage">
+        <div class="card">
+            <h3>⚔️ Battle Arena</h3>
+            <p style="font-size: 13px; color: #64748b;">သင့် Code ကို သူငယ်ချင်းကိုပြပြီး စိန်ခေါ်ခိုင်းပါ</p>
+            <div id="qrcode"></div>
+            <div class="my-code-badge" id="myCodeDisp">---</div>
+            
+            <button class="btn btn-scan" onclick="startCamera()">📷 QR Scan ဖတ်မည်</button>
+            
+            <label class="btn btn-gallery">
+                🖼️ Gallery မှ ပုံရွေးမည်
+                <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="scanFile(this)">
+            </label>
+        </div>
 
-    <div class="content">
-        <div id="homePage">
-            <div class="card">
-                <h2>⚔️ Battle Arena</h2>
-                <p>သင့် Code: <b id="myCode" style="font-size:20px; color:#1a2a6c;">...</b></p>
-                <div id="qrcode" style="display: flex; justify-content: center; margin: 20px 0;"></div>
-                <button class="btn" style="background:var(--secondary);" onclick="startScanner()">📷 QR Scan ဖတ်ပြီး စိန်ခေါ်မည်</button>
+        <div class="card">
+            <h3>🔍 တိုက်ရိုက်စိန်ခေါ်မည်</h3>
+            <input type="text" id="targetInput" placeholder="သူငယ်ချင်း၏ Code ကိုရိုက်ပါ">
+            <button class="btn btn-battle" onclick="manualJoin()">⚔️ Battle စတင်မည်</button>
+        </div>
+    </div>
+
+    <div id="battlePage" class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <b style="color: var(--secondary);">🛡️ တိုက်ပွဲဝင်နေသည်</b>
+            <button onclick="location.reload()" style="border:none; background:none; color:#64748b; font-weight:bold;">ထွက်မည်</button>
+        </div>
+
+        <div class="vs-card">
+            <div class="player-info">
+                <div id="myName">You</div>
+                <div class="player-wage" id="myWage" style="color: #2563eb;">0฿</div>
             </div>
-
-            <div class="card">
-                <h3>🔍 Code သို့မဟုတ် Link ဖြင့် ရှာဖွေမည်</h3>
-                <div class="input-group">
-                    <input type="text" id="oppInput" placeholder="သူငယ်ချင်း၏ Code သို့မဟုတ် Link ကိုရိုက်ပါ">
-                </div>
-                <button class="btn" style="background:#2563eb;" onclick="startBattleManual()">⚔️ Battle စတင်မည်</button>
-                <button class="btn" style="background:#0f172a; margin-top:5px;" onclick="shareMyLink()">🌐 ကိုယ့် Link ကို Share မည်</button>
-            </div>
-
-            <div class="card">
-                <h3>📜 ပွဲစဉ်မှတ်တမ်း (Match History)</h3>
-                <div id="matchHistory">...မှတ်တမ်းမရှိသေးပါ...</div>
+            <div style="font-weight: bold; color: var(--secondary); font-size: 20px;">VS</div>
+            <div class="player-info">
+                <div id="oppName">User</div>
+                <div class="player-wage" id="oppWage" style="color: var(--secondary);">0฿</div>
             </div>
         </div>
 
-        <div id="battlePage" class="card" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3>🛡️ တိုက်ပွဲ</h3>
-                <button style="background:none; border:none; color:var(--secondary); font-weight:bold; cursor:pointer;" onclick="endBattle()">ထွက်မည်</button>
-            </div>
-            
-            <div class="vs-area">
-                <div id="myName">You</div>
-                <div style="color:var(--secondary); font-size:18px;">VS</div>
-                <div id="oppName">User</div>
-            </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="vBar"></div>
+        </div>
+        <p id="bStatus" style="font-size: 13px; font-weight: bold;">⏳ စောင့်ဆိုင်းနေသည်...</p>
 
-            <div style="display:flex; justify-content:space-around; font-weight:bold;">
-                <span id="myWage" style="color:#2563eb;">0฿</span>
-                <span id="oppWage" style="color:var(--secondary);">0฿</span>
-            </div>
-            
-            <div class="progress-bar">
-                <div class="progress-fill" id="vsProgress"></div>
-            </div>
-            <p id="battleStatus" style="font-size:13px; color:#666; margin-top:5px;">⏳ တိုက်ပွဲစတင်နေပြီ...</p>
-
-            <div class="chat-box" id="chatBox"></div>
-            <div style="display:flex; gap:5px; margin-top:10px;">
-                <input type="text" id="msgInput" placeholder="စာပို့ရန် (Emoji ပါရစေ)..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;">
-                <button onclick="sendMsg()" style="padding:10px 20px; border-radius:8px; background:#1a2a6c; color:white; border:none;">ပို့</button>
-            </div>
+        <div class="chat-box" id="chatBox"></div>
+        <div style="display: flex; gap: 8px; margin-top: 15px;">
+            <input type="text" id="msgInput" placeholder="စာတို/အီမိုဂျီ ပို့ရန်...">
+            <button class="btn btn-battle" style="width: 80px; margin-top: 0;" onclick="sendMsg()">ပို့</button>
         </div>
     </div>
 
     <div id="scanner-container">
         <div id="reader"></div>
-        <button class="btn" style="background:var(--secondary); width:90%; margin-top:15px;" onclick="stopScanner()">❌ Scanner ပိတ်မည်</button>
+        <button class="btn btn-scan" style="width: 85%; margin-top: 20px;" onclick="stopCamera()">❌ ပိတ်မည်</button>
     </div>
 
     <script>
-        // Firebase Configuration
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyD7T7WZg0fLGTw6ShqDHjOva-btNF6O1AM",
-            authDomain: "seafood-oder.firebaseapp.com",
             databaseURL: "https://seafood-oder-default-rtdb.firebaseio.com",
             projectId: "seafood-oder",
-            storageBucket: "seafood-oder.firebasestorage.app",
-            messagingSenderId: "428949391732",
             appId: "1:428949391732:web:6aa0a31a4f4ba33765c421"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         // Local Data
-        let myProfile = JSON.parse(localStorage.getItem('f_prof')) || { name: 'You', code: 'EMP' + Date.now().toString().slice(-4), av: '👷', wage: 0 };
-        let records = JSON.parse(localStorage.getItem('f_recs')) || [];
-        myProfile.wage = records.filter(r => r.type === 'income').reduce((a, b) => a + b.amt, 0) || 0;
-        
-        let html5QrScanner = null;
-        let currentBattleId = null;
+        let myProf = JSON.parse(localStorage.getItem('f_prof')) || { name: 'You', code: 'EMP' + Math.floor(1000 + Math.random() * 9000), wage: 0 };
+        let scanner = null;
+        let bId = null;
 
-        document.getElementById('myCode').innerText = myProfile.code;
+        document.getElementById('myCodeDisp').innerText = "CODE: " + myProf.code;
 
-        // 1. QR Code ထုတ်ပေးခြင်း
-        new QRCode(document.getElementById("qrcode"), { text: myProfile.code, width: 128, height: 128 });
+        // 1. QR Code ထုတ်ခြင်း
+        new QRCode(document.getElementById("qrcode"), { text: myProf.code, width: 160, height: 160 });
 
-        // 2. QR Scanner (နောက်ကင်မရာ အသေအချာသုံးခြင်း)
-        function startScanner() {
+        // 2. ကင်မရာ စနစ် (အဝေး/အနီး ချိတ်ရန် environment mode သုံး)
+        function startCamera() {
             document.getElementById('scanner-container').style.display = 'flex';
-            // environment: "back" က နောက်ကင်မရာကို သုံးခိုင်းတာပါ
-            html5QrScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250, facingMode: "environment" });
-            html5QrScanner.render((decodedText) => {
-                stopScanner();
-                connectToBattle(decodedText);
+            scanner = new Html5Qrcode("reader");
+            scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+                stopCamera();
+                checkAndJoin(txt);
             });
         }
 
-        function stopScanner() {
-            if (html5QrScanner) html5QrScanner.clear();
+        function stopCamera() {
+            if(scanner) scanner.stop();
             document.getElementById('scanner-container').style.display = 'none';
         }
 
-        // 3. Battle ချိတ်ဆက်ခြင်း
-        function startBattleManual() {
-            let input = document.getElementById('oppInput').value;
-            if(input.includes('?sender=')) input = input.split('?sender=')[1].split('&')[0]; // Extract code from link
-            connectToBattle(input);
+        // 3. Gallery မှ ပုံဖတ်ခြင်း
+        function scanFile(input) {
+            if(!input.files[0]) return;
+            const reader = new Html5Qrcode("reader");
+            reader.scanFile(input.files[0], true)
+                .then(txt => checkAndJoin(txt))
+                .catch(err => alert("❌ QR ပုံ ရှာမတွေ့ပါ"));
         }
 
-        function connectToBattle(oppCode) {
-            if (!oppCode || oppCode === myProfile.code) return showNoti("❌ Code မှားနေပါသည်");
+        // 4. User ရှိ/မရှိ တိတိကျကျ စစ်ဆေးခြင်း
+        async function checkAndJoin(targetCode) {
+            if(!targetCode || targetCode === myProf.code) return alert("❌ Code မှားနေပါသည်");
             
-            // Battle Room ID သတ်မှတ်ခြင်း
-            currentBattleId = myProfile.code < oppCode ? `${myProfile.code}_${oppCode}` : `${oppCode}_${myProfile.code}`;
+            // Firebase တွင် တကယ်ရှိသော User ဟုတ်မဟုတ် စစ်ဆေးခြင်း
+            const snap = await db.ref('users/' + targetCode).once('value');
+            if(!snap.exists()) {
+                alert("❌ ဤ Code ဖြင့် User ရှာမတွေ့ပါ။");
+                return;
+            }
             
-            // Firebase ဆီ ကိုယ့်ဝင်ငွေ ပို့ထားခြင်း
-            db.ref('battles/' + currentBattleId + '/players/' + myProfile.code).set({ name: myProfile.name, wage: myProfile.wage });
+            startBattle(targetCode);
+        }
+
+        function manualJoin() {
+            checkAndJoin(document.getElementById('targetInput').value.trim());
+        }
+
+        // 5. Battle Page စတင်ခြင်း
+        function startBattle(oppCode) {
+            bId = myProf.code < oppCode ? `${myProf.code}_${oppCode}` : `${oppCode}_${myProf.code}`;
             
-            // Page ပြောင်းခြင်း
+            // ကိုယ့်ဝင်ငွေကို Firebase ပို့ထား
+            db.ref(`battles/${bId}/players/${myProf.code}`).set({ name: myProf.name, wage: myProf.wage || 0 });
+            
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('battlePage').style.display = 'block';
-            
-            // Battle Data နားထောင်ခြင်း
-            db.ref('battles/' + currentBattleId + '/players').on('value', snap => {
-                const players = snap.val();
-                if(players && players[oppCode]) {
-                    const opp = players[oppCode];
-                    const me = players[myProfile.code];
-                    
-                    document.getElementById('myName').innerText = me.name;
+
+            // Real-time Update
+            db.ref(`battles/${bId}/players`).on('value', s => {
+                const ps = s.val();
+                if(ps && ps[oppCode]) {
+                    const opp = ps[oppCode];
+                    const me = ps[myProf.code];
                     document.getElementById('oppName').innerText = opp.name;
-                    document.getElementById('myWage').innerText = me.wage.toFixed(0) + '฿';
-                    document.getElementById('oppWage').innerText = opp.wage.toFixed(0) + '฿';
-
-                    // Progress Bar
-                    const totalWage = me.wage + opp.wage;
-                    const fillPercent = totalWage > 0 ? (me.wage / totalWage) * 100 : 50;
-                    document.getElementById('vsProgress').style.width = fillPercent + '%';
-
-                    // အသိပေးချက်
-                    if(me.wage > opp.wage) document.getElementById('battleStatus').innerHTML = "🔥 မင်းက အသာစီးရနေတယ်!";
-                    else if(me.wage < opp.wage) document.getElementById('battleStatus').innerHTML = "😟 တစ်ဖက်လူက သာနေတယ်!";
-                    else document.getElementById('battleStatus').innerHTML = "⚖️ သရေဖြစ်နေတယ်!";
+                    document.getElementById('myWage').innerText = me.wage.toFixed(0) + "฿";
+                    document.getElementById('oppWage').innerText = opp.wage.toFixed(0) + "฿";
+                    
+                    const total = me.wage + opp.wage;
+                    const perc = total > 0 ? (me.wage / total) * 100 : 50;
+                    document.getElementById('vBar').style.width = perc + "%";
+                    
+                    document.getElementById('bStatus').innerText = me.wage > opp.wage ? "🔥 မင်းက အသာစီးရနေတယ်!" : "⚖️ အခြေအနေ တူညီနေသည်";
                 }
             });
 
-            // Chat နားထောင်ခြင်း child_added ကိုသုံးပြီး စာအသစ်တက်လာရင်ပဲ ပြမှာပါ
-            db.ref('battles/' + currentBattleId + '/chats').on('child_added', snap => {
-                const m = snap.val();
-                if(m.time > Date.now() - 5000) showNoti(`💬 ${m.senderName}: ${m.text}`); // New message noti
-                
+            // Chat Listen
+            db.ref(`battles/${bId}/chats`).on('child_added', s => {
+                const m = s.val();
                 const div = document.createElement('div');
-                div.className = `msg ${m.sender === myProfile.code ? 'me' : 'him'}`;
+                div.className = `msg ${m.sender === myProf.code ? 'me' : 'him'}`;
                 div.innerText = m.text;
                 document.getElementById('chatBox').appendChild(div);
                 document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
             });
         }
 
-        // 4. စာပို့ခြင်း (Emoji ပါရစေ)
+        // 6. စာပို့ခြင်း
         function sendMsg() {
-            const text = document.getElementById('msgInput').value;
-            if(!text || !currentBattleId) return;
-            db.ref('battles/' + currentBattleId + '/chats').push({
-                sender: myProfile.code,
-                senderName: myProfile.name,
-                text: text,
-                time: Date.now()
-            });
+            const txt = document.getElementById('msgInput').value;
+            if(!txt || !bId) return;
+            db.ref(`battles/${bId}/chats`).push({ sender: myProf.code, text: txt });
             document.getElementById('msgInput').value = '';
         }
-
-        // 5. Link ကို Share မည်
-        function shareMyLink() {
-            const link = `https://daily-y-app.github.io/Battle-wage/?sender=${myProfile.code}`;
-            navigator.share({ title: 'Battle Challenge', text: 'ကျွန်တော်နဲ့ DailyWage မှာ ပြိုင်ကြရအောင်!', url: link })
-            .catch(() => alert("🔗 Link: " + link));
-        }
-
-        // 6. ပွဲစဉ်မှတ်တမ်း (Match History)
-        function loadHistory() {
-            db.ref('users/' + myProfile.code + '/history').limitToLast(5).once('value', snap => {
-                const hist = snap.val();
-                const div = document.getElementById('matchHistory'); div.innerHTML = "";
-                if(hist) {
-                    Object.values(hist).reverse().forEach(h => {
-                        const winClass = h.result === 'WIN' ? 'win' : 'lose';
-                        div.innerHTML += `<div class="history-item"><span>VS ${h.oppName}</span><span class="${winClass}">${h.result} (${h.myWage.toFixed(0)}฿ vs ${h.oppWage.toFixed(0)}฿)</span></div>`;
-                    });
-                } else div.innerHTML = "မှတ်တမ်းမရှိသေးပါ";
-            });
-        }
-
-        // 7. Notification
-        function showNoti(txt) {
-            const el = document.getElementById('noti'); el.innerText = txt; el.style.display = 'block';
-            setTimeout(() => el.style.display = 'none', 3000);
-        }
-
-        function endBattle() { location.reload(); } // Simple end for now
-
-        window.onload = () => { loadHistory(); };
     </script>
 </body>
 </html>
+
