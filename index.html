@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚔️ Pro Battle Arena</title>
+    <title>🏆 Premium Battle Arena</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -11,213 +11,279 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
-        :root { --primary: #1a2a6c; --secondary: #b21f1f; --accent: #22c55e; --bg: #f8fafc; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        body { background: var(--bg); padding: 15px; color: #334155; }
-        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; margin-bottom: 15px; border: 1px solid #e2e8f0; }
-        h3 { margin-bottom: 15px; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        :root { --gold: #d4af37; --dark: #0f172a; --card: rgba(255, 255, 255, 0.05); --win: #22c55e; --lose: #ef4444; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--dark); color: white; padding: 15px; padding-bottom: 80px; }
         
-        /* QR Area */
-        #qrcode { display: flex; justify-content: center; margin: 20px 0; padding: 15px; background: #fff; border-radius: 15px; border: 1px dashed #cbd5e1; }
-        .my-code-badge { background: #f1f5f9; padding: 8px 15px; border-radius: 10px; font-weight: bold; color: var(--primary); font-size: 18px; margin-bottom: 10px; }
+        .card { background: var(--card); backdrop-filter: blur(10px); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; text-align: center; }
+        
+        /* Profile & QR */
+        .id-text { font-size: 18px; font-weight: bold; color: var(--gold); letter-spacing: 1px; margin: 10px 0; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 10px; display: inline-block;}
+        #qrcode { background: white; padding: 15px; border-radius: 15px; display: inline-block; margin: 10px 0; border: 3px solid var(--gold); }
 
         /* Buttons */
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-scan { background: var(--secondary); color: white; }
-        .btn-gallery { background: #0f172a; color: white; }
-        .btn-battle { background: #2563eb; color: white; }
-        .btn:active { transform: scale(0.98); }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-gold { background: linear-gradient(135deg, #d4af37, #b8860b); color: black; }
+        .btn-outline { background: transparent; color: var(--gold); border: 2px solid var(--gold); }
+        .btn-red { background: var(--lose); color: white; }
+        
+        /* Inputs */
+        input[type="text"] { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; margin-bottom: 15px; outline: none; text-align: center;}
 
-        /* Scanner Overlay */
-        #scanner-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        #reader { width: 85%; max-width: 400px; border-radius: 20px; overflow: hidden; border: 4px solid white; }
+        /* Battle Room */
+        .vs-container { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
+        .wage-text { font-size: 24px; font-weight: 900; color: var(--gold); }
+        .hp-track { height: 16px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; border: 1px solid var(--gold); }
+        .hp-fill { height: 100%; width: 50%; background: linear-gradient(90deg, #2563eb, var(--gold)); transition: 0.5s ease; }
 
-        /* Battle UI */
-        #battlePage { display: none; }
-        .vs-card { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
-        .player-info { flex: 1; }
-        .player-wage { font-size: 22px; font-weight: bold; margin-top: 5px; }
-        .progress-container { height: 14px; background: #e2e8f0; border-radius: 7px; overflow: hidden; margin: 15px 0; }
-        .progress-bar { height: 100%; background: linear-gradient(to right, #2563eb, var(--secondary)); width: 50%; transition: width 0.5s; }
+        /* Chat System (Added Back!) */
+        .chat-area { height: 180px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 15px; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin: 15px 0; text-align: left; border: 1px solid rgba(255,255,255,0.05);}
+        .msg { padding: 8px 14px; border-radius: 12px; font-size: 14px; max-width: 80%; word-wrap: break-word; }
+        .msg.me { background: var(--gold); color: black; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg.opp { background: #334155; color: white; align-self: flex-start; border-bottom-left-radius: 2px; }
 
-        /* Chat */
-        .chat-box { height: 250px; overflow-y: auto; background: #f1f5f9; border-radius: 15px; padding: 15px; display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
-        .msg { padding: 10px 14px; border-radius: 12px; font-size: 14px; max-width: 85%; word-wrap: break-word; }
-        .msg.me { background: var(--primary); color: white; align-self: flex-end; }
-        .msg.him { background: white; color: #334155; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
-        input[type="text"] { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 16px; outline: none; }
+        /* Popups & Overlays */
+        #invite-pop { position: fixed; top: 20px; left: 20px; right: 20px; background: var(--gold); color: black; padding: 20px; border-radius: 15px; display: none; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; font-weight: bold;}
+        #cam-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:999; display:none; flex-direction:column; align-items:center; justify-content:center; }
+        #reader { width: 90%; max-width: 350px; border-radius: 20px; overflow: hidden; border: 3px solid var(--gold); background: black;}
+        
+        .history-box { font-size: 13px; text-align: left; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <div id="homePage">
-        <div class="card">
-            <h3>⚔️ Battle Arena</h3>
-            <p style="font-size: 13px; color: #64748b;">သင့် Code ကို သူငယ်ချင်းကိုပြပြီး စိန်ခေါ်ခိုင်းပါ</p>
-            <div id="qrcode"></div>
-            <div class="my-code-badge" id="myCodeDisp">---</div>
-            
-            <button class="btn btn-scan" onclick="startCamera()">📷 QR Scan ဖတ်မည်</button>
-            
-            <label class="btn btn-gallery">
-                🖼️ Gallery မှ ပုံရွေးမည်
-                <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="scanFile(this)">
-            </label>
-        </div>
-
-        <div class="card">
-            <h3>🔍 တိုက်ရိုက်စိန်ခေါ်မည်</h3>
-            <input type="text" id="targetInput" placeholder="သူငယ်ချင်း၏ Code ကိုရိုက်ပါ">
-            <button class="btn btn-battle" onclick="manualJoin()">⚔️ Battle စတင်မည်</button>
+    <div id="invite-pop">
+        🔔 <span id="inviterName">User</span> မှ တိုက်ပွဲစိန်ခေါ်နေပါသည်!
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn" style="background: black; color: var(--gold); margin:0;" onclick="acceptInvy()">⚔️ လက်ခံမည်</button>
+            <button class="btn btn-red" style="margin:0;" onclick="rejectInvy()">❌ ငြင်းမည်</button>
         </div>
     </div>
 
-    <div id="battlePage" class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <b style="color: var(--secondary);">🛡️ တိုက်ပွဲဝင်နေသည်</b>
-            <button onclick="location.reload()" style="border:none; background:none; color:#64748b; font-weight:bold;">ထွက်မည်</button>
-        </div>
-
-        <div class="vs-card">
-            <div class="player-info">
-                <div id="myName">You</div>
-                <div class="player-wage" id="myWage" style="color: #2563eb;">0฿</div>
-            </div>
-            <div style="font-weight: bold; color: var(--secondary); font-size: 20px;">VS</div>
-            <div class="player-info">
-                <div id="oppName">User</div>
-                <div class="player-wage" id="oppWage" style="color: var(--secondary);">0฿</div>
+    <div id="homeUI">
+        <div class="card">
+            <h3 style="color: var(--gold); margin-bottom: 5px;">🛡️ My Battle Profile</h3>
+            <div id="qrcode"></div><br>
+            <div class="id-text" id="myIdDisp">ID: Loading...</div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-gold" onclick="openCam()" style="flex: 1;">📷 QR Scan ဖတ်မည်</button>
+                <label class="btn btn-outline" style="flex: 1; margin-bottom: 10px; cursor: pointer;">
+                    🖼️ Gallery ရွေးမည်
+                    <input type="file" accept="image/*" style="display:none;" onchange="scanImg(this)">
+                </label>
             </div>
         </div>
 
-        <div class="progress-container">
-            <div class="progress-bar" id="vBar"></div>
+        <div class="card">
+            <h4 style="margin-bottom: 10px;">🔍 တိုက်ရိုက်ချိတ်ဆက်မည်</h4>
+            <input type="text" id="targetId" placeholder="စိန်ခေါ်မည့်သူ၏ ID ကိုရိုက်ပါ">
+            <button class="btn btn-gold" onclick="manualInvite()">⚔️ စိန်ခေါ်မည်</button>
         </div>
-        <p id="bStatus" style="font-size: 13px; font-weight: bold;">⏳ စောင့်ဆိုင်းနေသည်...</p>
 
-        <div class="chat-box" id="chatBox"></div>
-        <div style="display: flex; gap: 8px; margin-top: 15px;">
-            <input type="text" id="msgInput" placeholder="စာတို/အီမိုဂျီ ပို့ရန်...">
-            <button class="btn btn-battle" style="width: 80px; margin-top: 0;" onclick="sendMsg()">ပို့</button>
+        <div class="card">
+            <h4 style="color: var(--gold); margin-bottom: 10px;">📜 Match History</h4>
+            <div id="historyList">မှတ်တမ်းမရှိသေးပါ...</div>
         </div>
     </div>
 
-    <div id="scanner-container">
+    <div id="battleUI" style="display:none;">
+        <div class="card" style="border-color: var(--gold);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                <span style="color:var(--win); font-weight:bold;">● LIVE BATTLE</span>
+                <span onclick="exitBattle()" style="color:#94a3b8; cursor:pointer;">🏠 ထွက်မည်</span>
+            </div>
+
+            <div class="vs-container">
+                <div style="flex:1; text-align:center;">
+                    <div style="font-size:12px; color:#94a3b8;">You</div>
+                    <div id="p1Name" style="font-weight:bold;">Player</div>
+                    <div class="wage-text" id="p1W">0฿</div>
+                </div>
+                <div style="font-weight:900; color:var(--lose); font-size:20px;">VS</div>
+                <div style="flex:1; text-align:center;">
+                    <div style="font-size:12px; color:#94a3b8;">Opponent</div>
+                    <div id="p2Name" style="font-weight:bold;">Enemy</div>
+                    <div class="wage-text" id="p2W">0฿</div>
+                </div>
+            </div>
+
+            <div class="hp-track"><div class="hp-fill" id="hpBar"></div></div>
+            <h4 id="resultMsg" style="margin-top:15px; color: var(--gold);">⚖️ တွက်ချက်နေသည်...</h4>
+            
+            <button class="btn btn-outline" id="shareBtn" style="margin-top:15px; display:none;" onclick="shareResult()">📤 ရလဒ်ကို မျှဝေမည်</button>
+
+            <div class="chat-area" id="chatBox"></div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="chatInput" placeholder="စာပို့ရန်..." style="margin:0; flex:1;">
+                <button class="btn btn-gold" style="width:70px; margin:0;" onclick="sendChat()">ပို့</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cam-overlay">
+        <h3 style="color:var(--gold); margin-bottom:20px;">QR စကန်ဖတ်ပါ</h3>
         <div id="reader"></div>
-        <button class="btn btn-scan" style="width: 85%; margin-top: 20px;" onclick="stopCamera()">❌ ပိတ်မည်</button>
+        <button class="btn btn-red" style="width:200px; margin-top:30px;" onclick="closeCam()">❌ ပိတ်မည်</button>
     </div>
 
     <script>
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyD7T7WZg0fLGTw6ShqDHjOva-btNF6O1AM",
-            databaseURL: "https://seafood-oder-default-rtdb.firebaseio.com",
-            projectId: "seafood-oder",
-            appId: "1:428949391732:web:6aa0a31a4f4ba33765c421"
-        };
-        firebase.initializeApp(firebaseConfig);
+        // --- 1. Firebase Initialization ---
+        const config = { databaseURL: "https://seafood-oder-default-rtdb.firebaseio.com" };
+        if (!firebase.apps.length) { firebase.initializeApp(config); }
         const db = firebase.database();
 
-        // Local Data
-        let myProf = JSON.parse(localStorage.getItem('f_prof')) || { name: 'You', code: 'EMP' + Math.floor(1000 + Math.random() * 9000), wage: 0 };
-        let scanner = null;
-        let bId = null;
+        // --- 2. User Data Setup ---
+        let myProf = JSON.parse(localStorage.getItem('f_prof')) || { name: 'Fighter', code: 'EMP' + Math.floor(Math.random()*9000), wage: 0 };
+        let currentRoom = null, scanner = null, activeInvy = null;
 
-        document.getElementById('myCodeDisp').innerText = "CODE: " + myProf.code;
+        document.getElementById('myIdDisp').innerText = "ID: " + myProf.code;
+        new QRCode(document.getElementById("qrcode"), { text: myProf.code, width: 150, height: 150, colorDark: "#000", colorLight: "#fff" });
+        loadHistory();
 
-        // 1. QR Code ထုတ်ခြင်း
-        new QRCode(document.getElementById("qrcode"), { text: myProf.code, width: 160, height: 160 });
-
-        // 2. ကင်မရာ စနစ် (အဝေး/အနီး ချိတ်ရန် environment mode သုံး)
-        function startCamera() {
-            document.getElementById('scanner-container').style.display = 'flex';
-            scanner = new Html5Qrcode("reader");
-            scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-                stopCamera();
-                checkAndJoin(txt);
-            });
-        }
-
-        function stopCamera() {
-            if(scanner) scanner.stop();
-            document.getElementById('scanner-container').style.display = 'none';
-        }
-
-        // 3. Gallery မှ ပုံဖတ်ခြင်း
-        function scanFile(input) {
-            if(!input.files[0]) return;
-            const reader = new Html5Qrcode("reader");
-            reader.scanFile(input.files[0], true)
-                .then(txt => checkAndJoin(txt))
-                .catch(err => alert("❌ QR ပုံ ရှာမတွေ့ပါ"));
-        }
-
-        // 4. User ရှိ/မရှိ တိတိကျကျ စစ်ဆေးခြင်း
-        async function checkAndJoin(targetCode) {
-            if(!targetCode || targetCode === myProf.code) return alert("❌ Code မှားနေပါသည်");
-            
-            // Firebase တွင် တကယ်ရှိသော User ဟုတ်မဟုတ် စစ်ဆေးခြင်း
-            const snap = await db.ref('users/' + targetCode).once('value');
-            if(!snap.exists()) {
-                alert("❌ ဤ Code ဖြင့် User ရှာမတွေ့ပါ။");
-                return;
+        // --- 3. Listen for Incoming Invites ---
+        db.ref(`invites/${myProf.code}`).on('value', s => {
+            if(s.exists()){
+                activeInvy = s.val();
+                document.getElementById('inviterName').innerText = activeInvy.fromName;
+                document.getElementById('invite-pop').style.display = 'block';
+            } else {
+                document.getElementById('invite-pop').style.display = 'none';
             }
+        });
+
+        // --- 4. Scanner Functions (Camera & Gallery) ---
+        function openCam() {
+            document.getElementById('cam-overlay').style.display='flex';
+            scanner = new Html5Qrcode("reader");
+            scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (id) => {
+                closeCam(); processInvite(id);
+            }).catch(err => alert("ကင်မရာ ဖွင့်မရပါ။ Gallery ကို သုံးပါ။"));
+        }
+        function closeCam() { if(scanner) scanner.stop(); document.getElementById('cam-overlay').style.display='none'; }
+        function scanImg(el) {
+            if(!el.files[0]) return;
+            new Html5Qrcode("reader").scanFile(el.files[0], true).then(id => processInvite(id)).catch(() => alert("QR မတွေ့ပါ"));
+        }
+        function manualInvite() { processInvite(document.getElementById('targetId').value.trim()); }
+
+        // --- 5. Sending Invite ---
+        async function processInvite(targetId) {
+            if(!targetId || targetId === myProf.code) return alert("❌ ကိုယ့်ကိုယ်ကို စိန်ခေါ်၍မရပါ");
+            const snap = await db.ref('users/' + targetId).once('value');
+            if(!snap.exists()) return alert("❌ User ရှာမတွေ့ပါ။ ID မှားနေပါသည်။");
+
+            const roomId = 'RM_' + Date.now();
+            await db.ref(`invites/${targetId}`).set({ fromId: myProf.code, fromName: myProf.name, roomId: roomId });
+            alert("စိန်ခေါ်မှု ပို့လိုက်ပါပြီ။ တစ်ဖက်က လက်ခံရန် စောင့်ဆိုင်းနေပါသည်...");
             
-            startBattle(targetCode);
+            // Wait for them to accept
+            db.ref(`rooms/${roomId}`).on('value', s => { if(s.exists()) startBattle(roomId); });
         }
 
-        function manualJoin() {
-            checkAndJoin(document.getElementById('targetInput').value.trim());
+        // --- 6. Accept / Reject Invite ---
+        function acceptInvy() {
+            const rid = activeInvy.roomId;
+            db.ref(`rooms/${rid}/players/${myProf.code}`).set({ n: myProf.name, w: myProf.wage || 0 });
+            db.ref(`rooms/${rid}/players/${activeInvy.fromId}`).set({ n: activeInvy.fromName, w: 0 }); // Placeholder
+            db.ref(`invites/${myProf.code}`).remove();
+            startBattle(rid);
         }
+        function rejectInvy() { db.ref(`invites/${myProf.code}`).remove(); }
 
-        // 5. Battle Page စတင်ခြင်း
-        function startBattle(oppCode) {
-            bId = myProf.code < oppCode ? `${myProf.code}_${oppCode}` : `${oppCode}_${myProf.code}`;
-            
-            // ကိုယ့်ဝင်ငွေကို Firebase ပို့ထား
-            db.ref(`battles/${bId}/players/${myProf.code}`).set({ name: myProf.name, wage: myProf.wage || 0 });
-            
-            document.getElementById('homePage').style.display = 'none';
-            document.getElementById('battlePage').style.display = 'block';
+        // --- 7. BATTLE LOGIC & HP BAR ---
+        function startBattle(rid) {
+            currentRoom = rid;
+            document.getElementById('homeUI').style.display='none';
+            document.getElementById('battleUI').style.display='block';
 
-            // Real-time Update
-            db.ref(`battles/${bId}/players`).on('value', s => {
+            // Push my exact wage
+            db.ref(`rooms/${rid}/players/${myProf.code}`).update({ n: myProf.name, w: myProf.wage || 0 });
+
+            // Listen to both players
+            db.ref(`rooms/${rid}/players`).on('value', s => {
                 const ps = s.val();
-                if(ps && ps[oppCode]) {
-                    const opp = ps[oppCode];
-                    const me = ps[myProf.code];
-                    document.getElementById('oppName').innerText = opp.name;
-                    document.getElementById('myWage').innerText = me.wage.toFixed(0) + "฿";
-                    document.getElementById('oppWage').innerText = opp.wage.toFixed(0) + "฿";
-                    
-                    const total = me.wage + opp.wage;
-                    const perc = total > 0 ? (me.wage / total) * 100 : 50;
-                    document.getElementById('vBar').style.width = perc + "%";
-                    
-                    document.getElementById('bStatus').innerText = me.wage > opp.wage ? "🔥 မင်းက အသာစီးရနေတယ်!" : "⚖️ အခြေအနေ တူညီနေသည်";
+                if(!ps) return;
+                
+                let myData = ps[myProf.code];
+                let oppKey = Object.keys(ps).find(k => k !== myProf.code);
+                let oppData = oppKey ? ps[oppKey] : { n: "Opponent", w: 0 };
+
+                document.getElementById('p1Name').innerText = myData.n; 
+                document.getElementById('p1W').innerText = Math.round(myData.w) + "฿";
+                document.getElementById('p2Name').innerText = oppData.n; 
+                document.getElementById('p2W').innerText = Math.round(oppData.w) + "฿";
+
+                let total = myData.w + oppData.w;
+                let perc = total > 0 ? (myData.w / total) * 100 : 50;
+                document.getElementById('hpBar').style.width = perc + "%";
+
+                if (myData.w > oppData.w) {
+                    document.getElementById('resultMsg').innerText = "🔥 သင်က အသာစီးရနေသည်!";
+                    document.getElementById('resultMsg').style.color = "var(--win)";
+                } else if (myData.w < oppData.w) {
+                    document.getElementById('resultMsg').innerText = "⚠️ ပြိုင်ဘက်က အသာစီးရနေသည်!";
+                    document.getElementById('resultMsg').style.color = "var(--lose)";
+                } else {
+                    document.getElementById('resultMsg').innerText = "⚖️ သရေကျနေသည်";
+                    document.getElementById('resultMsg').style.color = "white";
                 }
+                document.getElementById('shareBtn').style.display = 'block';
+                saveHistory(oppData.n, myData.w > oppData.w ? 'Win' : 'Lose');
             });
 
-            // Chat Listen
-            db.ref(`battles/${bId}/chats`).on('child_added', s => {
-                const m = s.val();
+            // --- 8. CHAT LOGIC ---
+            document.getElementById('chatBox').innerHTML = ''; // Clear old chats
+            db.ref(`rooms/${rid}/chats`).on('child_added', s => {
+                const msg = s.val();
                 const div = document.createElement('div');
-                div.className = `msg ${m.sender === myProf.code ? 'me' : 'him'}`;
-                div.innerText = m.text;
+                div.className = `msg ${msg.sender === myProf.code ? 'me' : 'opp'}`;
+                div.innerText = msg.text;
                 document.getElementById('chatBox').appendChild(div);
                 document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
             });
         }
 
-        // 6. စာပို့ခြင်း
-        function sendMsg() {
-            const txt = document.getElementById('msgInput').value;
-            if(!txt || !bId) return;
-            db.ref(`battles/${bId}/chats`).push({ sender: myProf.code, text: txt });
-            document.getElementById('msgInput').value = '';
+        function sendChat() {
+            const txt = document.getElementById('chatInput').value;
+            if(!txt || !currentRoom) return;
+            db.ref(`rooms/${currentRoom}/chats`).push({ sender: myProf.code, text: txt });
+            document.getElementById('chatInput').value = '';
+        }
+
+        // --- 9. Extra Features (History & Share) ---
+        function shareResult() {
+            const myW = document.getElementById('p1W').innerText;
+            const oppW = document.getElementById('p2W').innerText;
+            const txt = `🏆 Premium Battle Arena\n\nကျွန်ုပ်: ${myW}\nပြိုင်ဘက်: ${oppW}\n\nပွဲစဉ်အခြေအနေ ပြင်းထန်နေပါသည်!`;
+            if(navigator.share) navigator.share({ text: txt }); else alert(txt);
+        }
+
+        function saveHistory(oppName, status) {
+            let hist = JSON.parse(localStorage.getItem('b_hist')) || [];
+            let entry = `vs ${oppName} - ${status === 'Win' ? '🏆 နိုင်' : '❌ ရှုံး'}`;
+            if(hist[0] !== entry) { 
+                hist.unshift(entry);
+                if(hist.length > 5) hist.pop();
+                localStorage.setItem('b_hist', JSON.stringify(hist));
+            }
+        }
+
+        function loadHistory() {
+            let hist = JSON.parse(localStorage.getItem('b_hist')) || [];
+            const box = document.getElementById('historyList');
+            if(hist.length === 0) return;
+            box.innerHTML = '';
+            hist.forEach(h => {
+                let color = h.includes('နိုင်') ? 'var(--win)' : 'var(--lose)';
+                box.innerHTML += `<div class="history-box"><span style="color:${color}; font-weight:bold;">${h}</span></div>`;
+            });
+        }
+
+        function exitBattle() {
+            if(currentRoom) db.ref(`rooms/${currentRoom}`).remove(); // Clean up room
+            location.reload();
         }
     </script>
 </body>
 </html>
-
