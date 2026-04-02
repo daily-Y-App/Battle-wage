@@ -12,8 +12,13 @@
         :root { --blue: #1a2a6c; --red: #b21f1f; --gold: #ffd700; --dark: #0f1c3f; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: linear-gradient(135deg, var(--dark), var(--blue)); color: #fff; min-height: 100vh; overflow-x: hidden; }
-        .nav-bar { display: flex; align-items: center; background: linear-gradient(135deg, var(--blue), var(--red)); padding: 15px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        
+        /* Nav Bar Update: Added space between for History Button */
+        .nav-bar { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, var(--blue), var(--red)); padding: 15px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .nav-left { display: flex; align-items: center; }
         .back-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding-right: 15px; }
+        .history-btn { background: rgba(0,0,0,0.3); border: 1px solid var(--gold); color: var(--gold); padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        
         .card { background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; margin: 15px; border: 1px solid rgba(255,255,255,0.1); }
         .my-id-box { text-align: center; border: 2px dashed var(--gold); padding: 10px; border-radius: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.3); }
         .id-text { font-size: 22px; font-weight: 900; color: var(--gold); letter-spacing: 2px; }
@@ -23,12 +28,19 @@
         .vs-grid { display: grid; grid-template-columns: 1fr 40px 1fr; align-items: center; text-align: center; }
         .wage-amt { font-size: 26px; font-weight: 900; color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.3); }
         .winner-tag { font-size: 10px; background: #4caf50; color: white; padding: 2px 6px; border-radius: 4px; display: none; margin-top: 5px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; color: white; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; color: white; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
         .btn-gold { background: var(--gold); color: #000; }
         .btn-red { background: #e11d48; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; text-align: center; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; text-align: center; font-size: 14px; }
+        
         #notiPop { position: fixed; top: 70px; left: 15px; right: 15px; background: var(--gold); color: #000; padding: 20px; border-radius: 15px; z-index: 2000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid #fff; }
         .chat-box { height: 120px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px; margin-bottom: 10px; font-size: 13px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* Modal Style for History */
+        .modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: var(--dark); border: 1px solid var(--gold); border-radius: 15px; width: 100%; max-width: 400px; padding: 20px; max-height: 80vh; overflow-y: auto; }
+        .history-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 12px; border-left: 3px solid var(--gold); }
     </style>
 </head>
 <body>
@@ -42,9 +54,20 @@
         </div>
     </div>
 
+    <div id="historyModal" class="modal-bg">
+        <div class="modal-content">
+            <h3 style="color:var(--gold); text-align:center; margin-bottom:15px;">📜 လုပ်ဆောင်မှု မှတ်တမ်း</h3>
+            <div id="historyList"></div>
+            <button class="btn btn-red" onclick="closeHistory()" style="margin-top:15px;">ပိတ်မည်</button>
+        </div>
+    </div>
+
     <div class="nav-bar">
-        <button class="back-btn" onclick="goBack()">❮</button>
-        <h2>BATTLE ARENA</h2>
+        <div class="nav-left">
+            <button class="back-btn" onclick="goBack()">❮</button>
+            <h2>BATTLE ARENA</h2>
+        </div>
+        <button class="history-btn" onclick="openHistory()">📜 မှတ်တမ်း</button>
     </div>
 
     <div id="setupArea">
@@ -54,17 +77,41 @@
                 <div class="id-text" id="myIdDisplay">------</div>
                 <button onclick="copyMyId()" style="background:none; border:none; color:var(--gold); font-size:12px; text-decoration:underline;">Copy ID</button>
             </div>
-            <input type="text" id="targetIdInput" placeholder="ပြိုင်ဘက် ID ရိုက်ထည့်ပါ">
+            
             <select id="duration">
                 <option value="15">၁၅ ရက် ပြိုင်ပွဲ</option>
                 <option value="30">ရက် ၃၀ ပြိုင်ပွဲ</option>
             </select>
-            <button class="btn btn-gold" onclick="sendChallenge()">⚔️ စိန်ခေါ်မှု ပို့မည်</button>
+
+            <select id="battleMode" onchange="toggleMode()">
+                <option value="solo">⚔️ 1 vs 1 (Solo Battle)</option>
+                <option value="team">🛡️ အဖွဲ့လိုက် (Team Battle)</option>
+            </select>
+
+            <div id="soloSetup">
+                <input type="text" id="targetIdInput" placeholder="ပြိုင်ဘက် ID ရိုက်ထည့်ပါ">
+                <button class="btn btn-gold" onclick="sendChallenge()">⚔️ စိန်ခေါ်မှု ပို့မည်</button>
+            </div>
+
+            <div id="teamSetup" style="display:none; text-align: center;">
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
+                <button class="btn" style="background:#4caf50;" onclick="createTeamRoom()">🛡️ အဖွဲ့သစ် တည်ထောင်မည်</button>
+                <p style="margin: 10px 0; font-size: 12px; opacity: 0.7;">(သို့မဟုတ်)</p>
+                <input type="text" id="teamRoomCode" placeholder="Team Room Code ထည့်ပါ">
+                <div style="display:flex; gap:10px;">
+                    <button class="btn" style="background:#2563eb; margin:0;" onclick="joinTeam('teamA')">Team A သို့ဝင်မည်</button>
+                    <button class="btn btn-red" style="margin:0;" onclick="joinTeam('teamB')">Team B သို့ဝင်မည်</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <div id="battleArea" style="display:none;">
         <div class="card">
+            <div id="roomCodeDisplay" style="text-align:center; font-size:11px; color:#aaa; margin-bottom:10px; display:none;">
+                Team Room Code: <span id="rCodeText" style="color:var(--gold); font-weight:bold;"></span>
+            </div>
+
             <div class="vs-grid">
                 <div>
                     <div id="p1Name" style="font-size:12px; opacity:0.8;">You</div>
@@ -78,20 +125,24 @@
                     <span class="winner-tag" id="p2Win">🏆 WINNING</span>
                 </div>
             </div>
+            
             <div class="hp-track">
                 <div id="hpFill" class="hp-fill"></div>
                 <div class="hp-center"></div>
             </div>
+            
             <div class="chat-box" id="chatBox"></div>
             <div style="display:flex; gap:5px;">
                 <input type="text" id="chatInput" placeholder="စာတို..." style="margin:0; text-align:left;">
                 <button class="btn btn-gold" style="width:60px; margin:0;" onclick="sendChat()">ပို့</button>
             </div>
+            
             <button class="btn btn-red" onclick="surrender()" style="margin-top:20px;">🏳️ အရှုံးပေး / ထွက်မည်</button>
         </div>
     </div>
 
     <script>
+        // Firebase Config (အစ်ကို့ရဲ့မူလအတိုင်း)
         const firebaseConfig = {
             apiKey: "AIzaSyD7T7WZg0fLGTw6ShqDHjOva-btNF6O1AM",
             authDomain: "seafood-oder.firebaseapp.com",
@@ -102,9 +153,12 @@
             appId: "1:428949391732:web:6aa0a31a4f4ba33765c421",
             measurementId: "G-GY9TRMQ359"
         };
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.database();
 
+        // Data တွေဆွဲယူခြင်း
         const profile = JSON.parse(localStorage.getItem('f_prof')) || { name: "Player" };
         let myId = localStorage.getItem('battle_id_v6') || Math.random().toString(36).substring(2, 8).toUpperCase();
         localStorage.setItem('battle_id_v6', myId);
@@ -114,7 +168,7 @@
         let myRole = localStorage.getItem('my_role');
         let pendingRoom = null;
 
-        // --- 🎯 ပြင်ဆင်လိုက်သော Logic: လက်ကျန်ငွေ (Income - Expense) တွက်ချက်ခြင်း ---
+        // --- ပြင်ဆင်ချက် ၁: ဝင်ငွေထွက်ငွေ သေချာတွက်ချက်ခြင်း Error Fix ---
         function calculateWage(days) {
             const records = JSON.parse(localStorage.getItem('f_records')) || JSON.parse(localStorage.getItem('f_recs')) || [];
             let netBalance = 0;
@@ -126,25 +180,79 @@
                 records.forEach(r => {
                     const rDate = new Date(r.date || r.timestamp);
                     if (rDate >= cutoff) {
-                        // ဝင်ငွေများ ပေါင်းမည်
-                        const income = parseFloat(r.basic_wage || 0) + parseFloat(r.ot_pay || 0) + parseFloat(r.extra || 0) + parseFloat(r.amount || r.amt || 0);
-                        // ထွက်ငွေ (Expense) ရှိလျှင် နှုတ်မည်
-                        const expense = parseFloat(r.expense || r.out_amt || 0); 
+                        // ဝင်ငွေများကို သေချာစွာ ဂဏန်းအဖြစ်ပြောင်းခြင်း
+                        const basic = parseFloat(r.basic_wage) || 0;
+                        const ot = parseFloat(r.ot_pay) || 0;
+                        const extra = parseFloat(r.extra) || 0;
+                        const amt = parseFloat(r.amount || r.amt) || 0;
+                        const income = basic + ot + extra + amt;
+
+                        // ထွက်ငွေများကို အနုတ်/အပေါင်း မှားမဝင်အောင် Math.abs ဖြင့်အသေချာနုတ်ခြင်း
+                        const exp1 = parseFloat(r.expense) || 0;
+                        const exp2 = parseFloat(r.out_amt) || 0;
+                        const expense = Math.abs(exp1) + Math.abs(exp2); 
                         
                         netBalance += (income - expense);
                     }
                 });
             }
             
-            // အကယ်၍ မှတ်တမ်းထဲမှာ မရှိဘဲ Profile ထဲမှာပဲ balance ရှိနေလျှင်
             if (netBalance === 0) {
                 const prof = JSON.parse(localStorage.getItem('f_prof'));
-                if (prof) netBalance = parseFloat(prof.balance || prof.wage || 0);
+                if (prof) netBalance = parseFloat(prof.balance || prof.wage) || 0;
             }
-            
             return netBalance;
         }
 
+        // --- ပြင်ဆင်ချက် ၂: History (မှတ်တမ်း) သိမ်းဆည်းသည့် Function ---
+        function saveHistory(enemyName, myTotal, enemyTotal, actionType) {
+            let history = JSON.parse(localStorage.getItem('battle_history') || '[]');
+            const date = new Date().toLocaleString();
+            let result = myTotal > enemyTotal ? "နိုင်" : (myTotal < enemyTotal ? "ရှုံး" : "သရေ");
+            if(actionType === 'surrender') result = "အရှုံးပေး/ထွက်ခဲ့သည်";
+            
+            history.unshift({ date, enemy: enemyName, my: myTotal, enemy: enemyTotal, result });
+            if(history.length > 20) history.pop(); // နောက်ဆုံး အခု ၂၀ သာမှတ်မည်
+            localStorage.setItem('battle_history', JSON.stringify(history));
+        }
+
+        function openHistory() {
+            const historyList = document.getElementById('historyList');
+            let history = JSON.parse(localStorage.getItem('battle_history') || '[]');
+            historyList.innerHTML = "";
+            if(history.length === 0) {
+                historyList.innerHTML = "<p style='text-align:center; font-size:12px;'>မှတ်တမ်း မရှိသေးပါ</p>";
+            } else {
+                history.forEach(h => {
+                    historyList.innerHTML += `
+                    <div class="history-item">
+                        <div style="color:#aaa;">📅 ${h.date}</div>
+                        <div>⚔️ ပြိုင်ဘက်: ${h.enemy}</div>
+                        <div>💰 ငါ: ${Math.round(h.my)}฿ | ပြိုင်ဘက်: ${Math.round(h.enemy)}฿</div>
+                        <div style="color:${h.result.includes('နိုင်') ? '#4caf50' : '#e11d48'}; font-weight:bold;">ရလဒ် - ${h.result}</div>
+                    </div>`;
+                });
+            }
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+
+        function closeHistory() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+
+        // Mode ပြောင်းသည့် UI
+        function toggleMode() {
+            const mode = document.getElementById('battleMode').value;
+            if(mode === 'team') {
+                document.getElementById('soloSetup').style.display = 'none';
+                document.getElementById('teamSetup').style.display = 'block';
+            } else {
+                document.getElementById('soloSetup').style.display = 'block';
+                document.getElementById('teamSetup').style.display = 'none';
+            }
+        }
+
+        // Invite Notification 
         db.ref(`invites/${myId}`).on('value', snap => {
             if (snap.exists()) {
                 const inv = snap.val();
@@ -157,6 +265,7 @@
             }
         });
 
+        // Solo Mode - Send Challenge
         async function sendChallenge() {
             const tid = document.getElementById('targetIdInput').value.trim().toUpperCase();
             if (!tid || tid === myId) return alert("ID မှားယွင်းနေပါသည်");
@@ -169,13 +278,14 @@
             localStorage.setItem('my_role', 'p1');
 
             await db.ref(`rooms/${rCode}`).set({
-                config: { days, start: Date.now(), status: 'waiting' },
+                config: { type: 'solo', days, start: Date.now(), status: 'waiting' },
                 p1: { name: profile.name, wage: myBalance, id: myId }
             });
             await db.ref(`invites/${tid}`).set({ fromName: profile.name, roomCode: rCode, days });
             startBattleUI();
         }
 
+        // Solo Mode - Accept Invite
         async function acceptInvite() {
             const snap = await db.ref(`rooms/${pendingRoom}`).once('value');
             if(!snap.exists()) return alert("ပွဲမရှိတော့ပါ");
@@ -189,6 +299,43 @@
             startBattleUI();
         }
 
+        // --- ပြင်ဆင်ချက် ၃: Team Mode စနစ်များ (Data လုံးဝမပျက်စေရန် TeamA, TeamB အနေဖြင့်သာ သိမ်းဆည်းသည်) ---
+        async function createTeamRoom() {
+            const days = document.getElementById('duration').value;
+            const rCode = "TEAM-" + Date.now().toString().slice(-6);
+            const myBalance = calculateWage(days);
+
+            currentRoom = rCode; myRole = 'teamA';
+            localStorage.setItem('active_room_id', rCode);
+            localStorage.setItem('my_role', 'teamA');
+
+            await db.ref(`rooms/${rCode}`).set({
+                config: { type: 'team', days, start: Date.now() },
+                teamA: { [myId]: { name: profile.name, wage: myBalance } },
+                teamB: {}
+            });
+            startBattleUI();
+        }
+
+        async function joinTeam(targetTeam) {
+            const rCode = document.getElementById('teamRoomCode').value.trim().toUpperCase();
+            if(!rCode) return alert("Room Code ထည့်ပါ");
+            
+            const snap = await db.ref(`rooms/${rCode}/config`).once('value');
+            if(!snap.exists() || snap.val().type !== 'team') return alert("Team Room မမှန်ကန်ပါ");
+
+            const days = snap.val().days;
+            const myBalance = calculateWage(days);
+            
+            currentRoom = rCode; myRole = targetTeam;
+            localStorage.setItem('active_room_id', rCode);
+            localStorage.setItem('my_role', targetTeam);
+
+            await db.ref(`rooms/${rCode}/${targetTeam}/${myId}`).set({ name: profile.name, wage: myBalance });
+            startBattleUI();
+        }
+
+        // Main Battle UI - Handles both Solo and Team seamlessy
         function startBattleUI() {
             document.getElementById('setupArea').style.display = 'none';
             document.getElementById('battleArea').style.display = 'block';
@@ -196,27 +343,63 @@
             db.ref(`rooms/${currentRoom}`).on('value', snap => {
                 const data = snap.val();
                 if (!data) return handleExit();
-                const p1 = data.p1 || { wage: 0, name: "P1" };
-                const p2 = data.p2 || { wage: 0, name: "စောင့်နေဆဲ..." };
+                
+                let isTeam = data.config && data.config.type === 'team';
+                let p1WageVal = 0, p2WageVal = 0;
+                let myTeamName = "You", enemyTeamName = "Opponent";
 
-                document.getElementById('p1Name').innerText = p1.name;
-                document.getElementById('p1Wage').innerText = Math.round(p1.wage) + "฿";
-                document.getElementById('p2Name').innerText = p2.name;
-                document.getElementById('p2Wage').innerText = Math.round(p2.wage) + "฿";
+                if(isTeam) {
+                    // Team Mode Logic
+                    document.getElementById('roomCodeDisplay').style.display = 'block';
+                    document.getElementById('rCodeText').innerText = currentRoom;
+                    
+                    let teamA = data.teamA || {};
+                    let teamB = data.teamB || {};
+                    let sumA = 0; Object.values(teamA).forEach(p => sumA += p.wage);
+                    let sumB = 0; Object.values(teamB).forEach(p => sumB += p.wage);
+                    
+                    p1WageVal = sumA; p2WageVal = sumB;
+                    myTeamName = `Team A (${Object.keys(teamA).length} ယောက်)`;
+                    enemyTeamName = `Team B (${Object.keys(teamB).length} ယောက်)`;
+                    
+                    // Update own wage real-time for team mode
+                    if(data.config) {
+                        const latest = calculateWage(data.config.days);
+                        db.ref(`rooms/${currentRoom}/${myRole}/${myId}/wage`).set(latest);
+                    }
+                } else {
+                    // Solo Mode Logic (Original)
+                    const p1 = data.p1 || { wage: 0, name: "P1" };
+                    const p2 = data.p2 || { wage: 0, name: "စောင့်နေဆဲ..." };
+                    p1WageVal = p1.wage; p2WageVal = p2.wage;
+                    myTeamName = p1.name; enemyTeamName = p2.name;
 
-                const total = p1.wage + p2.wage;
-                document.getElementById('hpFill').style.width = total > 0 ? (p1.wage / total * 100) + "%" : "50%";
-                document.getElementById('p1Win').style.display = (p1.wage > p2.wage) ? 'inline-block' : 'none';
-                document.getElementById('p2Win').style.display = (p2.wage > p1.wage) ? 'inline-block' : 'none';
-
-                if (data.config) {
-                    const latest = calculateWage(data.config.days);
-                    if (Math.round(latest) !== Math.round(myRole === 'p1' ? p1.wage : p2.wage)) {
-                        db.ref(`rooms/${currentRoom}/${myRole}/wage`).set(latest);
+                    // Update own wage real-time for solo
+                    if (data.config) {
+                        const latest = calculateWage(data.config.days);
+                        if (Math.round(latest) !== Math.round(myRole === 'p1' ? p1.wage : p2.wage)) {
+                            db.ref(`rooms/${currentRoom}/${myRole}/wage`).set(latest);
+                        }
                     }
                 }
+
+                // UI Updates
+                document.getElementById('p1Name').innerText = myTeamName;
+                document.getElementById('p1Wage').innerText = Math.round(p1WageVal) + "฿";
+                document.getElementById('p2Name').innerText = enemyTeamName;
+                document.getElementById('p2Wage').innerText = Math.round(p2WageVal) + "฿";
+
+                const total = p1WageVal + p2WageVal;
+                document.getElementById('hpFill').style.width = total > 0 ? (p1WageVal / total * 100) + "%" : "50%";
+                document.getElementById('p1Win').style.display = (p1WageVal > p2WageVal) ? 'inline-block' : 'none';
+                document.getElementById('p2Win').style.display = (p2WageVal > p1WageVal) ? 'inline-block' : 'none';
+
+                // Save latest state to local variable for history tracking when exit
+                window.latestBattleState = { enemy: enemyTeamName, myW: p1WageVal, enW: p2WageVal };
             });
 
+            // Chat Load
+            db.ref(`rooms/${currentRoom}/chats`).off(); // prevent duplicate listeners
             db.ref(`rooms/${currentRoom}/chats`).on('child_added', s => {
                 const c = s.val();
                 const div = document.createElement('div');
@@ -236,7 +419,16 @@
 
         function surrender() {
             if(confirm("ထွက်မှာ သေချာလား?")) {
-                db.ref(`rooms/${currentRoom}`).remove();
+                if(window.latestBattleState) {
+                    saveHistory(window.latestBattleState.enemy, window.latestBattleState.myW, window.latestBattleState.enW, 'surrender');
+                }
+                
+                // If team mode, just remove yourself. If solo, remove room.
+                if(myRole === 'teamA' || myRole === 'teamB') {
+                    db.ref(`rooms/${currentRoom}/${myRole}/${myId}`).remove();
+                } else {
+                    db.ref(`rooms/${currentRoom}`).remove();
+                }
                 handleExit();
             }
         }
@@ -250,6 +442,8 @@
         function rejectInvite() { db.ref(`invites/${myId}`).remove(); }
         function copyMyId() { navigator.clipboard.writeText(myId); alert("ID Copied!"); }
         function goBack() { window.history.back(); }
+        
+        // Auto start if room exists
         if (currentRoom) startBattleUI();
     </script>
 </body>
