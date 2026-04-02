@@ -3,186 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🏆 Premium Battle Arena</title>
+    <title>Battle Wage - Smart Finance Tracker</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
+    
     <style>
-        :root { --gold: #d4af37; --dark: #0f172a; --card: rgba(255, 255, 255, 0.05); --win: #22c55e; --lose: #ef4444; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--dark); color: white; padding: 15px; padding-bottom: 80px; }
-        .card { background: var(--card); backdrop-filter: blur(10px); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; text-align: center; }
-        .id-text { font-size: 18px; font-weight: bold; color: var(--gold); letter-spacing: 1px; margin: 10px 0; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 10px; display: inline-block;}
-        #qrcode { background: white; padding: 15px; border-radius: 15px; display: inline-block; margin: 10px 0; border: 3px solid var(--gold); }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-gold { background: linear-gradient(135deg, #d4af37, #b8860b); color: black; }
-        .btn-outline { background: transparent; color: var(--gold); border: 2px solid var(--gold); }
-        .btn-red { background: var(--lose); color: white; }
-        input[type="text"] { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; margin-bottom: 15px; text-align: center;}
-        .vs-container { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
-        .wage-text { font-size: 24px; font-weight: 900; color: var(--gold); }
-        .hp-track { height: 16px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; border: 1px solid var(--gold); }
-        .hp-fill { height: 100%; width: 50%; background: linear-gradient(90deg, #2563eb, var(--gold)); transition: 0.5s ease; }
-        .chat-area { height: 180px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 15px; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin: 15px 0; text-align: left; }
-        .msg { padding: 8px 14px; border-radius: 12px; font-size: 14px; max-width: 80%; }
-        .msg.me { background: var(--gold); color: black; align-self: flex-end; }
-        .msg.opp { background: #334155; color: white; align-self: flex-start; }
-        #invite-pop { position: fixed; top: 20px; left: 20px; right: 20px; background: var(--gold); color: black; padding: 20px; border-radius: 15px; display: none; z-index: 1000; text-align: center; font-weight: bold;}
-        #cam-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:999; display:none; flex-direction:column; align-items:center; justify-content:center; }
-        #reader { width: 90%; max-width: 350px; border-radius: 20px; overflow: hidden; border: 3px solid var(--gold); }
+        :root { --blue: #1a2a6c; --red: #b21f1f; --gold: #ffd700; --dark: #0f1c3f; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Pyidaungsu', sans-serif; }
+        body { background: linear-gradient(135deg, var(--dark), var(--blue)); color: #fff; min-height: 100vh; padding-bottom: 30px; }
+        
+        /* Header & Premium Look */
+        .header { background: linear-gradient(135deg, var(--blue), var(--red)); padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); position: sticky; top: 0; z-index: 100; }
+        .card { background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; margin: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* HP Bar System */
+        .hp-container { margin: 20px 0; }
+        .hp-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--gold); margin-bottom: 5px; font-weight: bold; }
+        .hp-track { height: 25px; background: rgba(0,0,0,0.5); border-radius: 15px; overflow: hidden; border: 1px solid var(--gold); display: flex; }
+        .hp-fill { height: 100%; width: 50%; background: linear-gradient(90deg, #4caf50, var(--gold)); transition: 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Battle Grid */
+        .vs-grid { display: grid; grid-template-columns: 1fr 40px 1fr; align-items: center; text-align: center; margin-bottom: 10px; }
+        .wage-amt { font-size: 26px; font-weight: 900; color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.3); }
+
+        /* Chat & Logs */
+        .chat-box { height: 180px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 10px; margin-bottom: 10px; font-size: 13px; }
+        .msg { margin-bottom: 6px; padding: 8px 12px; border-radius: 10px; max-width: 85%; line-height: 1.4; }
+        .msg.me { background: var(--blue); margin-left: auto; border-bottom-right-radius: 2px; }
+        .msg.opp { background: rgba(255,255,255,0.1); border-bottom-left-radius: 2px; }
+        .log-list { font-size: 11px; color: #94a3b8; height: 80px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+
+        /* Buttons */
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .btn-gold { background: linear-gradient(135deg, var(--gold), #b8860b); color: #000; }
+        .btn-blue { background: #2563eb; color: #fff; }
+        
+        input, select { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; }
+        
+        /* Noti Popup */
+        #notiPop { position: fixed; top: 20px; left: 15px; right: 15px; background: var(--gold); color: #000; padding: 20px; border-radius: 15px; z-index: 1000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div id="invite-pop">
-        🔔 <span id="inviterName"></span> မှ တိုက်ပွဲစိန်ခေါ်နေပါသည်!
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <button class="btn" style="background: black; color: var(--gold); margin:0;" onclick="acceptInvy()">⚔️ လက်ခံမည်</button>
-            <button class="btn btn-red" style="margin:0;" onclick="rejectInvy()">❌ ငြင်းမည်</button>
-        </div>
+    <div id="notiPop">
+        🔔 စိန်ခေါ်မှုအသစ် ရောက်ရှိနေပါသည်!
+        <button class="btn btn-blue" style="margin-top:10px;" onclick="acceptInvite()">⚔️ လက်ခံမည်</button>
     </div>
 
-    <div id="homeUI">
-        <div class="card">
-            <h3 style="color: var(--gold);">🛡️ My Battle Profile</h3>
-            <div id="qrcode"></div><br>
-            <div class="id-text" id="myIdDisp">ID: Loading...</div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-gold" onclick="openCam()" style="flex: 1;">📷 QR Scan</button>
-                <label class="btn btn-outline" style="flex: 1; cursor: pointer;">🖼️ Gallery <input type="file" accept="image/*" style="display:none;" onchange="scanImg(this)"></label>
-            </div>
-        </div>
-        <div class="card">
-            <h4>⚔️ ID ဖြင့်တိုက်ရိုက်စိန်ခေါ်မည်</h4>
-            <input type="text" id="targetId" placeholder="စိန်ခေါ်မည့်သူ၏ ID ရိုက်ပါ">
-            <button class="btn btn-gold" onclick="manualInvite()">စိန်ခေါ်မည်</button>
-        </div>
+    <div class="header">
+        <h1 id="statusText">⚔️ BATTLE WAGE</h1>
+        <p id="myFullId" style="font-size: 11px; opacity: 0.7; margin-top: 4px;"></p>
     </div>
 
-    <div id="battleUI" style="display:none;">
-        <div class="card" style="border-color: var(--gold);">
-            <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
-                <span style="color:var(--win); font-weight:bold;">● LIVE BATTLE</span>
-                <span onclick="location.reload()" style="color:#94a3b8; cursor:pointer;">🏠 ထွက်မည်</span>
-            </div>
-            <div class="vs-container">
-                <div style="flex:1;">
-                    <div id="p1Name" style="font-weight:bold;">You</div>
-                    <div class="wage-text" id="p1W">0฿</div>
-                </div>
-                <div style="font-weight:900; color:var(--lose); font-size:20px;">VS</div>
-                <div style="flex:1;">
-                    <div id="p2Name" style="font-weight:bold;">Opponent</div>
-                    <div class="wage-text" id="p2W">0฿</div>
-                </div>
-            </div>
-            <div class="hp-track"><div class="hp-fill" id="hpBar"></div></div>
-            <h4 id="resultMsg" style="margin-top:15px;">⚖️ တွက်ချက်နေသည်...</h4>
-            <div class="chat-area" id="chatBox"></div>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="chatInput" placeholder="စာပို့ရန်..." style="margin:0; flex:1;">
-                <button class="btn btn-gold" style="width:70px; margin:0;" onclick="sendChat()">ပို့</button>
-            </div>
-        </div>
+    <div id="setupArea" class="card">
+        <h3 style="margin-bottom:15px; color:var(--gold);">စိန်ခေါ်မှု အသစ်ပြုလုပ်ရန်</h3>
+        <label>ပြိုင်ပွဲကာလ</label>
+        <select id="duration">
+            <option value="15">၁၅ ရက် ပြိုင်ပွဲ</option>
+            <option value="30">ရက် ၃၀ ပြိုင်ပွဲ</option>
+        </select>
+        <label>စတင်မည့်ရက်စွဲ</label>
+        <input type="date" id="startDate">
+        <button class="btn btn-gold" onclick="createChallenge()">⚔️ Challenge Link ထုတ်မည်</button>
     </div>
 
-    <div id="cam-overlay">
-        <div id="reader"></div>
-        <button class="btn btn-red" style="width:200px; margin-top:30px;" onclick="closeCam()">❌ ပိတ်မည်</button>
+    <div id="battleArea" class="card" style="display:none;">
+        <div class="vs-grid">
+            <div>
+                <div id="p1Name" style="font-size:12px; opacity:0.8;">Player 1</div>
+                <div class="wage-amt" id="p1Wage">0฿</div>
+            </div>
+            <div style="font-weight:bold; color:var(--red); font-size:20px;">VS</div>
+            <div>
+                <div id="p2Name" style="font-size:12px; opacity:0.8;">Player 2</div>
+                <div class="wage-amt" id="p2Wage">0฿</div>
+            </div>
+        </div>
+
+        <div class="hp-container">
+            <div class="hp-label"><span id="p1Perc">50%</span><span>Power Balance</span><span id="p2Perc">50%</span></div>
+            <div class="hp-track"><div id="hpFill" class="hp-fill"></div></div>
+        </div>
+
+        <div class="chat-box" id="chatBox"></div>
+        <div style="display:flex; gap:8px; margin-bottom:15px;">
+            <input type="text" id="chatInput" placeholder="စာတိုပို့ရန်..." style="margin:0;">
+            <button class="btn btn-gold" style="width:70px; margin:0;" onclick="sendChat()">ပို့</button>
+        </div>
+
+        <div class="log-list" id="logList"></div>
+        <button class="btn btn-blue" onclick="copyLink()" style="margin-top:15px;">📋 Link ကူးယူပြီး သူငယ်ချင်းကို ခေါ်မည်</button>
     </div>
 
     <script>
-        const config = { databaseURL: "https://seafood-oder-default-rtdb.firebaseio.com" };
-        if (!firebase.apps.length) { firebase.initializeApp(config); }
+        // 1. Firebase Configuration
+        const fbConfig = { databaseURL: "https://seafood-oder-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(fbConfig);
         const db = firebase.database();
 
-        // 🟢 အဓိကပြင်ဆင်ချက်- သင့် App ရဲ့ LocalStorage က Data တွေကို အတိအကျဆွဲယူခြင်း
-        let rawProf = JSON.parse(localStorage.getItem('f_prof')) || {};
-        let myProf = {
-            name: rawProf.name || 'Fighter',
-            code: rawProf.code || 'P' + Math.floor(Math.random()*9000),
-            wage: parseFloat(rawProf.wage) || 0 // 3014฿ သို့မဟုတ် 750฿ ကို ဆွဲယူမည်
-        };
+        // 2. Identity Setup (StaffCode-Random4Chars)
+        const profile = JSON.parse(localStorage.getItem('f_prof')) || { name: "User", code: "000" };
+        const randomID = Math.random().toString(36).substring(2, 6).toUpperCase();
+        const myUniqueId = `${profile.code}-${randomID}`;
+        
+        let currentRoom = null;
+        let myRole = null;
+        let lastIncome = 0;
 
-        let currentRoom = null, scanner = null, activeInvy = null;
-        document.getElementById('myIdDisp').innerText = "ID: " + myProf.code;
-        new QRCode(document.getElementById("qrcode"), { text: myProf.code, width: 150, height: 150 });
+        document.getElementById('myFullId').innerText = "YOUR ID: " + myUniqueId;
+        document.getElementById('startDate').valueAsDate = new Date();
 
-        db.ref(`invites/${myProf.code}`).on('value', s => {
-            if(s.exists()){
-                activeInvy = s.val();
-                document.getElementById('inviterName').innerText = activeInvy.fromName;
-                document.getElementById('invite-pop').style.display = 'block';
-            } else { document.getElementById('invite-pop').style.display = 'none'; }
+        // 3. Incoming Challenge Listener (Notification)
+        db.ref(`invites/${profile.code}`).on('value', snap => {
+            if (snap.exists()) {
+                document.getElementById('notiPop').style.display = 'block';
+                window.pendingRoom = snap.val().roomId;
+            }
         });
 
-        function openCam() {
-            document.getElementById('cam-overlay').style.display='flex';
-            scanner = new Html5Qrcode("reader");
-            scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (id) => { closeCam(); sendInvite(id); });
-        }
-        function closeCam() { if(scanner) scanner.stop(); document.getElementById('cam-overlay').style.display='none'; }
-        function scanImg(el) { if(el.files[0]) new Html5Qrcode("reader").scanFile(el.files[0], true).then(id => sendInvite(id)); }
-        function manualInvite() { sendInvite(document.getElementById('targetId').value.trim()); }
+        // 4. URL Link Check
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomFromUrl = urlParams.get('room');
+        if (roomFromUrl) joinRoom(roomFromUrl);
 
-        async function sendInvite(targetId) {
-            if(!targetId || targetId === myProf.code) return;
-            const roomId = 'RM_' + Date.now();
-            await db.ref(`invites/${targetId}`).set({ fromId: myProf.code, fromName: myProf.name, fromWage: myProf.wage, roomId: roomId });
-            db.ref(`rooms/${roomId}`).on('value', s => { if(s.exists()) startBattle(roomId); });
-        }
+        async function createChallenge() {
+            const days = document.getElementById('duration').value;
+            const start = document.getElementById('startDate').value;
+            currentRoom = "ROOM_" + Date.now();
+            myRole = 'p1';
 
-        function acceptInvy() {
-            const rid = activeInvy.roomId;
-            // 🔴 Bug Fix: နှစ်ဖက်စလုံးရဲ့ Data တွေကို 0 မဖြစ်အောင် သေချာထည့်သွင်းခြင်း
-            db.ref(`rooms/${rid}/players/${myProf.code}`).set({ n: myProf.name, w: myProf.wage });
-            db.ref(`rooms/${rid}/players/${activeInvy.fromId}`).set({ n: activeInvy.fromName, w: activeInvy.fromWage });
-            db.ref(`invites/${myProf.code}`).remove();
-            startBattle(rid);
-        }
-        function rejectInvy() { db.ref(`invites/${myProf.code}`).remove(); }
+            const income = calculateWage(start, days);
+            lastIncome = income;
 
-        function startBattle(rid) {
-            currentRoom = rid;
-            document.getElementById('homeUI').style.display='none';
-            document.getElementById('battleUI').style.display='block';
-
-            db.ref(`rooms/${rid}/players`).on('value', s => {
-                const ps = s.val(); if(!ps) return;
-                let oppKey = Object.keys(ps).find(k => k !== myProf.code);
-                let myData = ps[myProf.code], oppData = ps[oppKey] || { n: "စောင့်ဆိုင်းနေသည်...", w: 0 };
-
-                document.getElementById('p1Name').innerText = myData.n;
-                document.getElementById('p1W').innerText = Math.round(myData.w) + "฿";
-                document.getElementById('p2Name').innerText = oppData.n;
-                document.getElementById('p2W').innerText = Math.round(oppData.w) + "฿";
-
-                let total = myData.w + oppData.w;
-                let perc = total > 0 ? (myData.w / total) * 100 : 50;
-                document.getElementById('hpBar').style.width = perc + "%";
-                document.getElementById('resultMsg').innerText = myData.w > oppData.w ? "🔥 သင်က အသာစီးရနေသည်!" : (myData.w < oppData.w ? "⚠️ ပြိုင်ဘက်က အသာစီးရနေသည်!" : "⚖️ သရေကျနေသည်");
+            await db.ref(`rooms/${currentRoom}`).set({
+                config: { days, start, status: 'active' },
+                p1: { id: myUniqueId, name: profile.name, wage: income },
+                logs: [{ msg: `${profile.name} က စိန်ခေါ်လိုက်ပြီ!`, time: Date.now() }]
             });
 
-            db.ref(`rooms/${rid}/chats`).on('child_added', s => {
-                const msg = s.val();
+            startBattle();
+        }
+
+        async function joinRoom(roomId) {
+            currentRoom = roomId;
+            myRole = 'p2';
+            const snap = await db.ref(`rooms/${roomId}`).once('value');
+            if (!snap.exists()) return alert("Battle Room မရှိတော့ပါ။");
+
+            const conf = snap.val().config;
+            const income = calculateWage(conf.start, conf.days);
+            lastIncome = income;
+
+            await db.ref(`rooms/${roomId}/p2`).set({ id: myUniqueId, name: profile.name, wage: income });
+            pushLog(`${profile.name} က တိုက်ပွဲသို့ ဝင်ရောက်လာသည်။`);
+            startBattle();
+        }
+
+        function calculateWage(startDateStr, days) {
+            const records = JSON.parse(localStorage.getItem('f_records')) || [];
+            const start = new Date(startDateStr);
+            const end = new Date(startDateStr);
+            end.setDate(start.getDate() + parseInt(days));
+
+            return records.reduce((total, r) => {
+                const d = new Date(r.date);
+                if (d >= start && d <= end) {
+                    // Basic + OT + Extra ပေါင်းလဒ်
+                    return total + (parseFloat(r.basic_wage || 0) + parseFloat(r.ot_pay || 0) + parseFloat(r.extra || 0));
+                }
+                return total;
+            }, 0);
+        }
+
+        function startBattle() {
+            document.getElementById('setupArea').style.display = 'none';
+            document.getElementById('battleArea').style.display = 'block';
+            document.getElementById('statusText').innerText = "⚔️ LIVE BATTLE";
+
+            db.ref(`rooms/${currentRoom}`).on('value', snap => {
+                const data = snap.val();
+                if (!data) return;
+
+                const p1 = data.p1;
+                const p2 = data.p2 || { name: "စောင့်ဆိုင်းဆဲ...", wage: 0 };
+
+                document.getElementById('p1Name').innerText = p1.name;
+                document.getElementById('p1Wage').innerText = Math.round(p1.wage) + "฿";
+                document.getElementById('p2Name').innerText = p2.name;
+                document.getElementById('p2Wage').innerText = Math.round(p2.wage) + "฿";
+
+                const total = p1.wage + p2.wage;
+                const p1Perc = total > 0 ? (p1.wage / total) * 100 : 50;
+                document.getElementById('hpFill').style.width = p1Perc + "%";
+                document.getElementById('p1Perc').innerText = Math.round(p1Perc) + "%";
+                document.getElementById('p2Perc').innerText = Math.round(100 - p1Perc) + "%";
+            });
+
+            db.ref(`rooms/${currentRoom}/chats`).on('child_added', s => {
+                const c = s.val();
                 const div = document.createElement('div');
-                div.className = `msg ${msg.sender === myProf.code ? 'me' : 'opp'}`;
-                div.innerText = msg.text;
+                div.className = `msg ${c.uid === myUniqueId ? 'me' : 'opp'}`;
+                div.innerText = c.text;
                 document.getElementById('chatBox').appendChild(div);
                 document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+            });
+
+            db.ref(`rooms/${currentRoom}/logs`).on('child_added', s => {
+                const l = s.val();
+                const div = document.createElement('div');
+                div.innerText = `> ${l.msg}`;
+                document.getElementById('logList').prepend(div);
+            });
+
+            // Auto-Sync Logic
+            setInterval(syncData, 15000);
+        }
+
+        function syncData() {
+            db.ref(`rooms/${currentRoom}/config`).once('value', snap => {
+                const conf = snap.val();
+                const currentIncome = calculateWage(conf.start, conf.days);
+                if (currentIncome !== lastIncome) {
+                    db.ref(`rooms/${currentRoom}/${myRole}/wage`).set(currentIncome);
+                    pushLog(`${profile.name} ၏ ဝင်ငွေ တိုးသွားသည် (+${Math.round(currentIncome - lastIncome)}฿)`);
+                    lastIncome = currentIncome;
+                }
             });
         }
 
         function sendChat() {
-            const txt = document.getElementById('chatInput').value;
-            if(txt && currentRoom) {
-                db.ref(`rooms/${currentRoom}/chats`).push({ sender: myProf.code, text: txt });
-                document.getElementById('chatInput').value = '';
-            }
+            const text = document.getElementById('chatInput').value;
+            if (!text) return;
+            db.ref(`rooms/${currentRoom}/chats`).push({ uid: myUniqueId, text });
+            document.getElementById('chatInput').value = "";
+        }
+
+        function pushLog(msg) {
+            db.ref(`rooms/${currentRoom}/logs`).push({ msg, time: Date.now() });
+        }
+
+        function copyLink() {
+            const link = window.location.origin + window.location.pathname + "?room=" + currentRoom;
+            navigator.clipboard.writeText(link).then(() => alert("Invite Link ကို Copy ကူးပြီးပါပြီ။"));
+        }
+
+        function acceptInvite() {
+            joinRoom(window.pendingRoom);
+            document.getElementById('notiPop').style.display = 'none';
+            db.ref(`invites/${profile.code}`).remove();
         }
     </script>
 </body>
-</html>
+    </html>
