@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Battle Wage Arena - Final Fixed</title>
+    <title>Battle Wage Arena - Final Fix</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -27,7 +27,7 @@
         .btn-gold { background: var(--gold); color: #000; }
         .btn-red { background: #e11d48; }
         input, select { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; text-align: center; font-size: 16px; }
-        #notiPop { position: fixed; top: 70px; left: 15px; right: 15px; background: var(--gold); color: #000; padding: 20px; border-radius: 15px; z-index: 2000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #notiPop { position: fixed; top: 70px; left: 15px; right: 15px; background: var(--gold); color: #000; padding: 20px; border-radius: 15px; z-index: 2000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid #fff; }
         .chat-box { height: 120px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px; margin-bottom: 10px; font-size: 13px; }
     </style>
 </head>
@@ -86,7 +86,7 @@
             </div>
             <div class="chat-box" id="chatBox"></div>
             <div style="display:flex; gap:5px;">
-                <input type="text" id="chatInput" placeholder="စာတို..." style="margin:0; text-align:left;">
+                <input type="text" id="chatInput" placeholder="စာတိုပို့ရန်..." style="margin:0; text-align:left;">
                 <button class="btn btn-gold" style="width:60px; margin:0;" onclick="sendChat()">ပို့</button>
             </div>
             <button class="btn btn-red" onclick="surrender()" style="margin-top:20px;">🏳️ အရှုံးပေး / ထွက်မည်</button>
@@ -107,15 +107,15 @@
         const db = firebase.database();
 
         const profile = JSON.parse(localStorage.getItem('f_prof')) || { name: "Player" };
-        let myId = localStorage.getItem('battle_id_v7') || Math.random().toString(36).substring(2, 8).toUpperCase();
-        localStorage.setItem('battle_id_v7', myId);
+        let myId = localStorage.getItem('battle_id_v8') || Math.random().toString(36).substring(2, 8).toUpperCase();
+        localStorage.setItem('battle_id_v8', myId);
         document.getElementById('myIdDisplay').innerText = myId;
 
         let currentRoom = localStorage.getItem('active_room_id');
         let myRole = localStorage.getItem('my_role');
         let pendingRoom = null;
 
-        // --- 🎯 အဓိကပြင်ဆင်ချက်- Expense ကို သေချာနှုတ်ရန် ---
+        // --- 🎯 ပြဿနာကို အပြီးတိုင်ရှင်းလင်းထားသော တွက်ချက်မှု ---
         function calculateWage(days) {
             const records = JSON.parse(localStorage.getItem('f_records')) || JSON.parse(localStorage.getItem('f_recs')) || [];
             let netBalance = 0;
@@ -126,23 +126,27 @@
                 records.forEach(r => {
                     const rDate = new Date(r.date || r.timestamp);
                     if (rDate >= cutoff) {
-                        // အဝင်များကို ပေါင်းမည် (Math.abs သုံးပြီး absolute value ယူသည်)
-                        const b = Math.abs(parseFloat(r.basic_wage) || 0);
-                        const o = Math.abs(parseFloat(r.ot_pay) || 0);
-                        const e = Math.abs(parseFloat(r.extra) || 0);
-                        const a = parseFloat(r.amount || r.amt || 0);
+                        const b = parseFloat(r.basic_wage) || 0;
+                        const o = parseFloat(r.ot_pay) || 0;
+                        const e = parseFloat(r.extra) || 0;
+                        const a = parseFloat(r.amount || r.amt) || 0;
+                        const ex = parseFloat(r.expense || r.out_amt) || 0;
+
+                        // ၁။ ဝင်ငွေအသေများကို ပေါင်းမည်
+                        netBalance += (b + o + e);
                         
-                        let income = b + o + e + (a > 0 ? a : 0);
-
-                        // အထွက်များကို နှုတ်မည် (Math.abs သုံးပြီး အမြဲတမ်း နှုတ်ကိန်းဖြစ်အောင် လုပ်သည်)
-                        const ex = Math.abs(parseFloat(r.expense || r.out_amt || 0));
-                        let expense = ex + (a < 0 ? Math.abs(a) : 0);
-
-                        netBalance += (income - expense);
+                        // ၂။ Amount က အပေါင်းဆို ပေါင်း၊ အနှုတ်ဆို နှုတ်မည်
+                        netBalance += a; 
+                        
+                        // ၃။ ထွက်ငွေ (Expense) ကို အတိအကျ နှုတ်မည်
+                        if (ex > 0) {
+                            netBalance -= ex; // အပေါင်းပြနေရင် နှုတ်မည်
+                        } else if (ex < 0) {
+                            netBalance += ex; // Database မှာ -500 လို့ အနှုတ်နဲ့သိမ်းထားရင် ပေါင်းလိုက်တာက အနှုတ်ပါပဲ
+                        }
                     }
                 });
             }
-            // Record မရှိလျှင် Profile မှ balance ကို ယူသည်
             if (netBalance === 0) {
                 const prof = JSON.parse(localStorage.getItem('f_prof'));
                 if (prof) netBalance = parseFloat(prof.balance || prof.wage || 0);
@@ -212,16 +216,18 @@
                 document.getElementById('p1Name').innerText = (myRole === 'p1' ? p1.name : p2.name);
                 document.getElementById('p2Name').innerText = (myRole === 'p1' ? p2.name : p1.name);
 
-                // HP Bar logic for +/- numbers
                 const total = Math.abs(myW) + Math.abs(enW);
-                const percent = total === 0 ? 50 : ((myW + (total/2)) / (total + (total/2)) * 100);
+                const percent = total === 0 ? 50 : (myW / total * 100);
                 document.getElementById('hpFill').style.width = percent + "%";
                 
                 document.getElementById('p1Win').style.display = (myW > enW) ? 'inline-block' : 'none';
                 document.getElementById('p2Win').style.display = (enW > myW) ? 'inline-block' : 'none';
 
-                // Sync current data
-                db.ref(`rooms/${currentRoom}/${myRole}/wage`).set(calculateWage(days));
+                // Data အဟောင်း/အသစ် ကွဲလွဲမှသာ Update လုပ်ရန် (Loop ဖြစ်ပြီး ငြိနေခြင်းကို ကာကွယ်ပေးသည်)
+                const realWage = calculateWage(days);
+                if (Math.round(myW) !== Math.round(realWage)) {
+                    db.ref(`rooms/${currentRoom}/${myRole}/wage`).set(realWage);
+                }
             });
 
             db.ref(`rooms/${currentRoom}/chats`).on('child_added', s => {
@@ -243,6 +249,7 @@
         function rejectInvite() { db.ref(`invites/${myId}`).remove(); }
         function copyMyId() { navigator.clipboard.writeText(myId); alert("ID Copied!"); }
         function goBack() { window.history.back(); }
+        
         if (currentRoom) startBattleUI();
     </script>
 </body>
