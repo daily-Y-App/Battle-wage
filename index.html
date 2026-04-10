@@ -200,40 +200,39 @@ let currentRoom = localStorage.getItem('active_room_id');
 let myRole      = localStorage.getItem('my_role');
 let pendingRoom = null;
 
-// ─── WAGE CALCULATOR (မှန်ကန်သော နှုတ်/ပေါင်း) ───
+// ─── WAGE CALCULATOR — home page (index.html) format အတိုင်း ─────
+// localStorage key : f_recs  (NOT f_records)
+// record fields    : { type:'income'|'expense', amt, date, details:{h,o,e} }
+// profile fields   : { wage: တစ်ရက်နှုန်း, ot: OT rate/hr }
+// income formula   : (h/8 * profile.wage) + (o * profile.ot) + e
+// expense formula  : amt (type==='expense' ဆို နုတ်)
 function calculateWage(days) {
-    let records = [];
-    try {
-        records = JSON.parse(localStorage.getItem('f_records') || '[]');
-        if (!Array.isArray(records)) records = [];
-    } catch(e) { records = []; }
+    const prof = JSON.parse(localStorage.getItem('f_prof') || '{}');
+    const recs = JSON.parse(localStorage.getItem('f_recs')  || '[]');
 
-    const cutoff = Date.now() - parseInt(days) * 86400000;
-    let total = 0;
+    const dailyRate = parseFloat(prof.wage || 0);  // e.g. 375
+    const otRate    = parseFloat(prof.ot   || 0);  // e.g. 69
+    const cutoff    = Date.now() - parseInt(days) * 86400000;
 
-    records.forEach(r => {
-        // Date parse — support multiple formats
-        const ts = new Date(r.date || r.timestamp || r.d || 0).getTime();
+    let wageTotal = 0, otCash = 0, extraTotal = 0, expTotal = 0;
+
+    recs.forEach(r => {
+        const ts = new Date(r.date || 0).getTime();
         if (ts < cutoff) return;
 
-        // ── ဝင်ငွေ (အပေါင်း) ──
-        const basic   = Math.abs(parseFloat(r.basic_wage  || r.basicWage || r.basic || r.bw || 0));
-        const ot      = Math.abs(parseFloat(r.ot_pay      || r.otPay     || r.ot    || r.op || 0));
-        const extra   = Math.abs(parseFloat(r.extra       || r.ex        || 0));
-
-        // ── ထွက်ငွေ (အနုတ်) ──
-        // expense field သည် ပေးထားသည်မှာ positive ဖြစ်နိုင် negative ဖြစ်နိုင် → Math.abs ဖြင့် စစ်ပြီး နုတ်ပစ်
-        const expense = Math.abs(parseFloat(r.expense || r.expenses || r.exp || r.out_amt || r.e || 0));
-
-        total += basic + ot + extra;
-        total -= expense;
+        if (r.type === 'income' && r.details) {
+            const h = parseFloat(r.details.h || 0);
+            const o = parseFloat(r.details.o || 0);
+            const e = parseFloat(r.details.e || 0);
+            wageTotal += (h / 8) * dailyRate;
+            otCash    += o * otRate;
+            extraTotal+= e;
+        } else if (r.type === 'expense') {
+            expTotal  += parseFloat(r.amt || 0);
+        }
     });
 
-    // records မရှိရင် f_prof မှ wage ယူ
-    if (total === 0) {
-        total = parseFloat(profile.wage || profile.balance || profile.totalWage || profile.w || 0);
-    }
-
+    const total = wageTotal + otCash + extraTotal - expTotal;
     return Math.round(total);
 }
 
