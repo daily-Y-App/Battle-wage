@@ -3,416 +3,964 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Battle Wage Arena</title>
+<title>⚔️ Battle Wage Arena</title>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
-:root{--blue:#1a2a6c;--blue2:#0f1c3f;--red:#b21f1f;--gold:#ffd700;--win:#22c55e;--lose:#e11d48;}
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-body{background:linear-gradient(160deg,var(--blue2),var(--blue));color:#fff;min-height:100vh;}
+:root{
+  --p1:#1a2a6c; --p2:#b21f1f; --acc:#ffd700;
+  --bg:#eef2ff; --card:#fff; --sub:#64748b;
+  --border:#e2e8f0; --win:#10b981; --lose:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Segoe UI',-apple-system,sans-serif;background:var(--bg);color:#1e293b;min-height:100vh;padding-bottom:76px;}
 
-/* NAV */
-.nav{display:flex;align-items:center;background:linear-gradient(90deg,var(--blue),var(--red));padding:14px 16px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.5);}
-.nav-back{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding-right:12px;line-height:1;}
-.nav h2{font-size:18px;font-weight:900;letter-spacing:2px;}
+/* ─ HEADER ─ */
+.hdr{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:90;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.hdr-left{display:flex;align-items:center;gap:10px;}
+.hdr h2{font-size:17px;font-weight:800;letter-spacing:1px;}
+.hdr-sub{font-size:10px;opacity:.7;}
+.back-btn{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0 8px 0 0;}
 
-/* CARD */
-.card{background:rgba(255,255,255,.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;margin:12px 14px;}
+/* ─ NAV ─ */
+.bnav{position:fixed;bottom:0;width:100%;background:#fff;display:flex;border-top:1px solid var(--border);box-shadow:0 -4px 20px rgba(0,0,0,.07);z-index:90;border-radius:20px 20px 0 0;}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;cursor:pointer;color:var(--sub);font-size:10px;font-weight:600;transition:.2s;}
+.ni.active{color:var(--p2);}
+.ni-icon{font-size:20px;}
 
-/* ID BOX */
-.id-box{border:2px dashed var(--gold);border-radius:12px;padding:14px;text-align:center;background:rgba(0,0,0,.35);margin-bottom:16px;}
-.id-lbl{font-size:11px;color:#94a3b8;margin-bottom:4px;}
-.id-val{font-size:26px;font-weight:900;color:var(--gold);letter-spacing:3px;}
-.id-copy{background:none;border:none;color:var(--gold);font-size:12px;text-decoration:underline;cursor:pointer;margin-top:4px;}
+/* ─ PAGE ─ */
+.page{display:none;}.page.active{display:block;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 
-/* FORM */
-select,input[type=text]{width:100%;padding:13px;margin-bottom:10px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#fff;font-size:15px;text-align:center;}
-select option{background:var(--blue2);}
+/* ─ CARD ─ */
+.card{background:var(--card);border-radius:20px;padding:18px;margin:12px 14px;box-shadow:0 4px 16px rgba(0,0,0,.06);border:1px solid var(--border);}
+.card-hero{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;border:none;}
 
-/* BTN */
-.btn{width:100%;padding:14px;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;transition:.15s;}
+/* ─ ID BOX ─ */
+.id-box{text-align:center;border:2px dashed var(--acc);border-radius:14px;padding:14px;background:rgba(255,215,0,.07);margin-bottom:16px;}
+.id-lbl{font-size:11px;color:var(--sub);margin-bottom:4px;}
+.id-val{font-size:26px;font-weight:900;color:var(--p1);letter-spacing:3px;}
+#qrDiv{display:inline-block;background:#fff;padding:8px;border-radius:10px;margin:8px 0;box-shadow:0 2px 10px rgba(0,0,0,.1);}
+
+/* ─ WAGE HERO ─ */
+.wage-hero{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,var(--p1),var(--p2));border-radius:16px;padding:14px 18px;margin-bottom:16px;color:#fff;}
+.wh-big{font-size:28px;font-weight:900;color:var(--acc);}
+.wh-lbl{font-size:11px;opacity:.75;margin-bottom:3px;}
+
+/* ─ BUTTONS ─ */
+.btn{width:100%;padding:14px;border:none;border-radius:14px;font-weight:700;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;transition:.15s;font-family:inherit;}
 .btn:active{transform:scale(.97);opacity:.85;}
-.btn-gold{background:var(--gold);color:#000;}
-.btn-red{background:var(--lose);color:white;}
-.btn-blue{background:#2563eb;color:white;}
-.btn-green{background:var(--win);color:white;}
-.btn-outline{background:transparent;color:var(--gold);border:2px solid var(--gold);}
-.btn-ghost{background:rgba(255,255,255,.08);color:white;border:1px solid rgba(255,255,255,.15);}
+.btn-primary{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;}
+.btn-gold{background:var(--acc);color:#000;}
+.btn-red{background:var(--lose);color:#fff;}
+.btn-green{background:var(--win);color:#fff;}
+.btn-ghost{background:rgba(0,0,0,.05);color:#1e293b;border:1px solid var(--border);}
+.btn-outline{background:transparent;color:var(--p1);border:2px solid var(--p1);}
+.btn:disabled{opacity:.4;pointer-events:none;}
+.btn-sm{padding:9px 14px;width:auto;font-size:13px;margin:0;}
 
-/* VS SECTION */
-.vs-grid{display:grid;grid-template-columns:1fr 44px 1fr;align-items:center;text-align:center;gap:8px;margin-bottom:14px;}
-.pl-name{font-size:12px;color:#94a3b8;margin-bottom:3px;}
-.pl-wage{font-size:28px;font-weight:900;color:var(--gold);}
-.win-tag{font-size:10px;font-weight:700;background:var(--win);color:white;padding:3px 8px;border-radius:6px;display:none;margin-top:5px;}
-.vs-sep{font-size:22px;font-weight:900;color:var(--red);}
+/* ─ FORM ─ */
+.flbl{font-size:12px;font-weight:600;color:var(--sub);margin-bottom:6px;display:block;}
+input[type=text],select{width:100%;padding:13px;border-radius:12px;border:2px solid var(--border);background:#fff;color:#1e293b;font-size:15px;font-family:inherit;text-align:center;outline:none;transition:border .2s;margin-bottom:10px;}
+input[type=text]:focus,select:focus{border-color:var(--p1);}
 
-/* HP BAR */
-.hp-wrap{position:relative;margin-bottom:14px;}
-.hp-track{height:28px;background:#000;border-radius:14px;overflow:hidden;border:2px solid var(--gold);display:flex;}
-.hp-me{height:100%;background:linear-gradient(90deg,#16a34a,var(--gold));transition:width 1.2s cubic-bezier(.4,0,.2,1);}
-.hp-opp{height:100%;background:linear-gradient(270deg,#dc2626,#f97316);transition:width 1.2s cubic-bezier(.4,0,.2,1);}
-.hp-divider{position:absolute;top:0;bottom:0;left:50%;width:2px;background:rgba(255,255,255,.4);}
+/* ─ MODE TOGGLE ─ */
+.mtog{display:flex;gap:8px;margin-bottom:14px;}
+.mbtn{flex:1;padding:11px;border-radius:12px;border:2px solid var(--border);background:#fff;color:var(--sub);font-weight:700;cursor:pointer;font-family:inherit;font-size:13px;transition:.2s;}
+.mbtn.active{border-color:var(--p1);color:var(--p1);background:rgba(26,42,108,.07);}
 
-/* CHAT */
-.chat-box{height:130px;overflow-y:auto;background:rgba(0,0,0,.35);border-radius:10px;padding:10px;margin-bottom:10px;font-size:13px;display:flex;flex-direction:column;gap:5px;}
-.chat-msg-me{color:var(--gold);text-align:right;}
-.chat-msg-opp{color:#e2e8f0;}
-.chat-row{display:flex;gap:6px;}
+/* ─ HP BAR ─ */
+.hp-wrap{margin:12px 0;}
+.hp-lbls{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:4px;}
+.hp-track{height:26px;background:#111;border-radius:13px;overflow:hidden;border:2px solid var(--acc);display:flex;position:relative;}
+.hp-me{height:100%;background:linear-gradient(90deg,#16a34a,#86efac);transition:width 1.3s cubic-bezier(.4,0,.2,1);}
+.hp-opp{height:100%;background:linear-gradient(90deg,#f97316,#dc2626);transition:width 1.3s cubic-bezier(.4,0,.2,1);}
+.hp-mid{position:absolute;left:50%;top:0;bottom:0;width:2px;background:rgba(255,255,255,.45);}
 
-/* ACTIVITY LOG */
-.log-box{max-height:200px;overflow-y:auto;background:rgba(0,0,0,.35);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;}
-.log-entry{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.05);border-left:3px solid;}
-.log-entry.log-me{border-color:#3b82f6;}
-.log-entry.log-opp{border-color:#ef4444;}
-.log-entry.log-sys{border-color:var(--gold);}
-.log-icon{font-size:15px;min-width:20px;}
-.log-text{font-size:12px;line-height:1.4;flex:1;}
-.log-time{font-size:10px;color:#475569;margin-top:2px;}
+/* ─ VS DISPLAY ─ */
+.vs-wrap{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:6px;text-align:center;margin-bottom:12px;}
+.vs-name{font-size:13px;color:var(--sub);margin-bottom:2px;}
+.vs-wage{font-size:28px;font-weight:900;color:var(--acc);}
+.vs-sep{font-size:20px;font-weight:900;color:var(--p2);}
+.win-tag{display:inline-block;font-size:10px;font-weight:700;background:var(--win);color:#fff;padding:2px 8px;border-radius:20px;margin-top:4px;}
 
-/* NOTIFICATION */
-#notiPop{position:fixed;top:65px;left:14px;right:14px;background:var(--gold);color:#000;padding:18px;border-radius:16px;z-index:2000;display:none;box-shadow:0 10px 30px rgba(0,0,0,.6);animation:popIn .3s ease;}
-@keyframes popIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* ─ TEAM CARDS ─ */
+.team-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.tc{border-radius:14px;padding:12px;text-align:center;border:2px solid;}
+.tc-a{border-color:#3b82f6;background:rgba(59,130,246,.07);}
+.tc-b{border-color:var(--p2);background:rgba(178,31,31,.07);}
+.tc-lbl{font-size:11px;font-weight:700;margin-bottom:6px;}
+.tc-wage{font-size:22px;font-weight:900;color:var(--acc);}
+.tc-members{font-size:10px;color:var(--sub);margin-top:4px;line-height:1.5;}
 
-/* TABS */
-.tab-row{display:flex;gap:6px;margin-bottom:12px;}
-.tab{flex:1;padding:9px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:transparent;color:#94a3b8;cursor:pointer;font-size:13px;font-weight:700;transition:.2s;}
-.tab.active{background:rgba(255,215,0,.15);border-color:var(--gold);color:var(--gold);}
+/* ─ SLOTS ─ */
+.slot-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px;}
+.slot{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:10px;font-size:12px;border:1px solid var(--border);background:#fff;}
+.slot.filled{border-color:var(--win);background:rgba(16,185,129,.06);}
+.slot.empty{opacity:.5;border-style:dashed;}
 
-/* TOAST */
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(30px);background:rgba(15,28,63,.95);border:1px solid var(--gold);color:white;padding:10px 22px;border-radius:30px;font-size:13px;z-index:999;opacity:0;transition:.3s;pointer-events:none;}
+/* ─ COUNTDOWN ─ */
+.cd-bar{display:flex;justify-content:center;gap:14px;background:rgba(0,0,0,.04);border-radius:12px;padding:10px;margin-bottom:12px;}
+.cd-u{text-align:center;}
+.cd-n{font-size:24px;font-weight:900;color:var(--p1);}
+.cd-l{font-size:9px;color:var(--sub);}
+.cd-s{font-size:20px;font-weight:900;color:var(--acc);padding-top:4px;}
+
+/* ─ TABS ─ */
+.trow{display:flex;gap:6px;margin-bottom:10px;}
+.tab{flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--sub);cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;transition:.2s;}
+.tab.active{background:rgba(26,42,108,.08);border-color:var(--p1);color:var(--p1);}
+
+/* ─ CHAT ─ */
+.chat-box{height:140px;overflow-y:auto;background:#f8fafc;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:5px;margin-bottom:10px;border:1px solid var(--border);}
+.cm{padding:6px 12px;border-radius:14px;font-size:13px;max-width:82%;word-break:break-word;}
+.cm-me{background:var(--p1);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+.cm-opp{background:#fff;color:#1e293b;align-self:flex-start;border:1px solid var(--border);border-bottom-left-radius:4px;}
+.cm-sys{background:rgba(255,215,0,.18);color:#856404;align-self:center;font-size:11px;font-style:italic;text-align:center;border-radius:20px;max-width:100%;}
+.cm-name{font-size:9px;opacity:.6;margin-bottom:2px;}
+
+/* ─ LOG ─ */
+.log-box{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;}
+.li{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:#f8fafc;border-radius:10px;border-left:3px solid;}
+.li.lme{border-color:var(--p1);}
+.li.lopp{border-color:var(--p2);}
+.li.lsys{border-color:var(--acc);}
+.li-icon{font-size:14px;min-width:18px;}
+.li-txt{font-size:12px;flex:1;line-height:1.4;}
+.li-t{font-size:10px;color:var(--sub);margin-top:2px;}
+
+/* ─ HISTORY ─ */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.stat-box{background:#fff;border-radius:14px;padding:12px;text-align:center;border:1px solid var(--border);}
+.stat-n{font-size:24px;font-weight:900;color:var(--p1);}
+.stat-l{font-size:10px;color:var(--sub);}
+.hi{display:flex;align-items:center;justify-content:space-between;padding:12px;background:#fff;border-radius:14px;margin-bottom:8px;border-left:5px solid;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.hi.hw{border-color:var(--win);}
+.hi.hl{border-color:var(--lose);}
+.hi.hd{border-color:#f59e0b;}
+.hbadge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.hw .hbadge{background:rgba(16,185,129,.15);color:var(--win);}
+.hl .hbadge{background:rgba(239,68,68,.15);color:var(--lose);}
+.hd .hbadge{background:rgba(245,158,11,.15);color:#d97706;}
+
+/* ─ LEADERBOARD ─ */
+.lb-item{display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border-radius:14px;margin-bottom:8px;border-left:4px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.lb-rank{font-size:20px;width:30px;text-align:center;}
+.lb-info{flex:1;}
+.lb-name{font-size:14px;font-weight:700;}
+.lb-sub{font-size:11px;color:var(--sub);}
+.lb-w{font-size:18px;font-weight:900;color:var(--p1);}
+
+/* ─ NOTIF BAR ─ */
+#notifBar{position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;padding:13px 16px;z-index:999;display:none;animation:slideDown .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.3);}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+
+/* ─ MODALS ─ */
+.modal{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
+.modal.show{display:flex;}
+.modal-box{background:#fff;border-radius:24px;padding:24px;width:100%;max-width:360px;text-align:center;}
+
+/* ─ QR SCANNER ─ */
+#scanModal{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+#reader{width:90%;max-width:310px;border-radius:16px;overflow:hidden;border:3px solid var(--acc);}
+
+/* ─ VICTORY ─ */
+#vicOverlay{position:fixed;inset:0;z-index:1500;background:rgba(10,20,50,.95);backdrop-filter:blur(12px);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;}
+.vic-emoji{font-size:80px;animation:vbounce .7s infinite alternate;}
+@keyframes vbounce{from{transform:scale(1)}to{transform:scale(1.1)}}
+/* confetti */
+.conf{position:absolute;width:9px;height:13px;border-radius:2px;animation:cfall linear infinite;}
+@keyframes cfall{0%{transform:translateY(-100px) rotate(0);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* ─ WAITING ─ */
+.dots{display:flex;justify-content:center;gap:7px;padding:12px;}
+.dot{width:7px;height:7px;background:var(--p1);border-radius:50%;animation:dp 1.4s infinite;}
+.dot:nth-child(2){animation-delay:.2s;}.dot:nth-child(3){animation-delay:.4s;}
+@keyframes dp{0%,80%,100%{transform:scale(0);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* ─ ROOM CODE ROW ─ */
+.rc-row{display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.04);border-radius:10px;padding:8px 12px;margin-bottom:12px;}
+.rc-code{font-size:14px;font-weight:700;color:var(--p1);letter-spacing:1px;}
+
+/* ─ TOAST ─ */
+#toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(15,28,63,.95);color:#fff;padding:10px 20px;border-radius:30px;font-size:13px;z-index:3000;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3);}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:rgba(255,215,0,.3);border-radius:3px;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:rgba(26,42,108,.3);border-radius:3px;}
 </style>
 </head>
 <body>
 
 <div id="toast"></div>
 
-<!-- NOTIFICATION POPUP -->
-<div id="notiPop">
-    <div style="font-size:15px;font-weight:700;margin-bottom:4px;">🔔 <span id="inviterName">Challenge!</span></div>
-    <div id="inviteDetail" style="font-size:12px;margin-bottom:12px;opacity:.8;"></div>
-    <div style="display:flex;gap:8px;">
-        <button class="btn btn-blue" style="margin:0;flex:1;" onclick="acceptInvite()">⚔️ လက်ခံမည်</button>
-        <button class="btn btn-ghost" style="margin:0;flex:1;" onclick="rejectInvite()">❌ ငြင်းမည်</button>
+<!-- ══ NOTIF BAR ══ -->
+<div id="notifBar">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <div style="font-size:14px;font-weight:700;">🔔 <span id="notif_who"></span></div>
+      <div style="font-size:11px;opacity:.8;" id="notif_det"></div>
     </div>
-</div>
-
-<!-- NAV -->
-<div class="nav">
-    <button class="nav-back" onclick="goBack()">❮</button>
-    <h2>BATTLE ARENA</h2>
-</div>
-
-<!-- SETUP AREA -->
-<div id="setupArea">
-    <div class="card">
-        <div class="id-box">
-            <div class="id-lbl">သင့်၏ Battle ID</div>
-            <div class="id-val" id="myIdDisplay">------</div>
-            <button class="id-copy" onclick="copyMyId()">Copy ID</button>
-        </div>
-        <select id="duration">
-            <option value="15">၁၅ ရက် ပြိုင်ပွဲ</option>
-            <option value="30">ရက် ၃၀ ပြိုင်ပွဲ</option>
-        </select>
-        <input type="text" id="targetIdInput" placeholder="ပြိုင်ဘက် ID ရိုက်ထည့်ပါ">
-        <button class="btn btn-gold" onclick="sendChallenge()">⚔️ စိန်ခေါ်မှု ပို့မည်</button>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-gold btn-sm" onclick="acceptInvite()">✅ ဝင်</button>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:none;" onclick="closeNotif()">✖</button>
     </div>
+  </div>
 </div>
 
-<!-- BATTLE AREA -->
-<div id="battleArea" style="display:none;">
-    <div class="card">
-
-        <!-- VS -->
-        <div class="vs-grid">
-            <div>
-                <div class="pl-name" id="p1Name">You</div>
-                <div class="pl-wage" id="p1Wage">0฿</div>
-                <div class="win-tag" id="p1Win">🏆 WINNING</div>
-            </div>
-            <div class="vs-sep">VS</div>
-            <div>
-                <div class="pl-name" id="p2Name">Opponent</div>
-                <div class="pl-wage" id="p2Wage">0฿</div>
-                <div class="win-tag" id="p2Win">🏆 WINNING</div>
-            </div>
-        </div>
-
-        <!-- HP BAR -->
-        <div class="hp-wrap">
-            <div class="hp-track">
-                <div id="hpMe" class="hp-me" style="width:50%;"></div>
-                <div id="hpOpp" class="hp-opp" style="width:50%;"></div>
-            </div>
-            <div class="hp-divider"></div>
-        </div>
-
-        <!-- TABS: Chat / Log -->
-        <div class="tab-row">
-            <button class="tab active" id="tabChat" onclick="switchTab('chat')">💬 Chat</button>
-            <button class="tab"        id="tabLog"  onclick="switchTab('log')">📋 လုပ်ဆောင်မှုမှတ်တမ်း</button>
-        </div>
-
-        <!-- CHAT PANEL -->
-        <div id="panelChat">
-            <div class="chat-box" id="chatBox"></div>
-            <div style="display:flex;gap:6px;">
-                <input type="text" id="chatInput" placeholder="စာတို..." style="margin:0;flex:1;text-align:left;padding:10px;">
-                <button class="btn btn-gold" style="width:58px;margin:0;padding:10px;" onclick="sendChat()">ပို့</button>
-            </div>
-        </div>
-
-        <!-- LOG PANEL -->
-        <div id="panelLog" style="display:none;">
-            <div class="log-box" id="logBox"></div>
-        </div>
-
-        <button class="btn btn-red" onclick="surrender()" style="margin-top:14px;margin-bottom:0;">🏳️ အရှုံးပေး / ထွက်မည်</button>
+<!-- ══ APPROVE MODAL ══ -->
+<div class="modal" id="approveModal">
+  <div class="modal-box">
+    <div style="font-size:32px;margin-bottom:10px;">🔔</div>
+    <h3 style="color:var(--p1);margin-bottom:8px;">ပြိုင်ဘက် ဝင်လာသည်</h3>
+    <div style="background:#f8fafc;border-radius:12px;padding:12px;margin-bottom:16px;">
+      <div style="font-size:18px;font-weight:700;" id="appr_name"></div>
+      <div style="font-size:13px;color:var(--sub);" id="appr_wage"></div>
     </div>
+    <button class="btn btn-green" onclick="approveGuest()">✅ ခွင့်ပြုမည်</button>
+    <button class="btn btn-red"   onclick="rejectGuest()">❌ ငြင်းမည်</button>
+  </div>
 </div>
+
+<!-- ══ QR SCAN MODAL ══ -->
+<div id="scanModal">
+  <div id="reader"></div>
+  <label class="btn btn-gold" style="width:220px;cursor:pointer;margin-bottom:0;">
+    🖼️ Gallery မှ Scan
+    <input type="file" accept="image/*" style="display:none;" onchange="scanGallery(this)">
+  </label>
+  <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none;width:220px;" onclick="closeScan()">❌ ပိတ်မည်</button>
+</div>
+
+<!-- ══ VICTORY OVERLAY ══ -->
+<div id="vicOverlay" style="display:none;">
+  <div id="confContainer" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;"></div>
+  <div class="vic-emoji" id="vic_emoji">🏆</div>
+  <div style="font-size:28px;font-weight:900;color:var(--acc);margin:10px 0;" id="vic_title"></div>
+  <div style="font-size:36px;font-weight:900;margin-bottom:6px;" id="vic_score"></div>
+  <div style="font-size:13px;color:#94a3b8;margin-bottom:28px;" id="vic_detail"></div>
+  <button class="btn btn-gold"  style="max-width:280px;" onclick="shareResult()">📤 ရလဒ် မျှဝေမည်</button>
+  <button class="btn btn-ghost" style="max-width:280px;background:rgba(255,255,255,.1);color:#fff;border:none;" onclick="closeVictory()">🏠 ပြန်သွားမည်</button>
+</div>
+
+<!-- ══ HEADER ══ -->
+<div class="hdr">
+  <div class="hdr-left">
+    <button class="back-btn" id="hdr_back" onclick="onBack()" style="display:none;">❮</button>
+    <div>
+      <div class="hdr h2" id="hdr_title" style="font-size:17px;font-weight:800;letter-spacing:1px;">⚔️ BATTLE ARENA</div>
+      <div class="hdr-sub" id="hdr_sub"></div>
+    </div>
+  </div>
+  <div id="hdr_right"></div>
+</div>
+
+<!-- ══════════════ HOME PAGE ══════════════ -->
+<div id="page-home" class="page active">
+
+  <div class="card">
+    <!-- ID + QR -->
+    <div class="id-box">
+      <div class="id-lbl">သင့်၏ Battle ID</div>
+      <div class="id-val" id="myIdDisp">------</div>
+      <div id="qrDiv"></div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="btn btn-outline btn-sm" onclick="copyId()">📋 Copy</button>
+        <button class="btn btn-primary btn-sm" onclick="shareId()">📤 Share</button>
+      </div>
+    </div>
+
+    <!-- Wage preview -->
+    <div class="wage-hero">
+      <div>
+        <div class="wh-lbl">💰 ပြိုင်ပွဲ Wage</div>
+        <div class="wh-big" id="wagePreview">0฿</div>
+        <div style="font-size:10px;opacity:.7;" id="wageSub"></div>
+      </div>
+      <div>
+        <div class="mbtn active" style="font-size:13px;padding:6px 12px;border-radius:10px;cursor:pointer;border:1px solid rgba(255,255,255,.3);" onclick="togglePeriod()">
+          <span id="periodLabel">15 ရက်</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode -->
+    <div class="flbl">⚔️ ပြိုင်ပွဲ ပုံစံ</div>
+    <div class="mtog">
+      <button class="mbtn active" id="m1v1" onclick="setMode('1v1')">👤 1 vs 1</button>
+      <button class="mbtn" id="mteam" onclick="setMode('team')">👥 Team Battle</button>
+    </div>
+
+    <!-- Team size row -->
+    <div id="tsRow" style="display:none;margin-bottom:14px;">
+      <div class="flbl">👥 တစ်ဖွဲ့ ဦးရေ</div>
+      <div class="mtog">
+        <button class="mbtn active" id="ts2" onclick="setTs(2)">2 vs 2</button>
+        <button class="mbtn" id="ts3" onclick="setTs(3)">3 vs 3</button>
+        <button class="mbtn" id="ts4" onclick="setTs(4)">4 vs 4</button>
+      </div>
+    </div>
+
+    <!-- 1v1 opponent -->
+    <div id="oppRow">
+      <div class="flbl">🎯 ပြိုင်ဘက် Battle ID</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input type="text" id="oppId" placeholder="ID ရိုက်ပါ" style="flex:1;text-align:left;margin:0;">
+        <button class="btn btn-outline btn-sm" onclick="openScan()" style="min-width:52px;">📷</button>
+      </div>
+      <button class="btn btn-primary" onclick="send1v1()">⚔️ Battle စိန်ခေါ်မည်</button>
+    </div>
+
+    <!-- Team create -->
+    <div id="teamRow" style="display:none;">
+      <button class="btn btn-primary" onclick="createTeam()">⚔️ Team Room ဖန်တီးမည်</button>
+    </div>
+  </div>
+
+  <!-- Join room -->
+  <div class="card">
+    <div class="flbl">🚪 Room Code ဖြင့် ဝင်မည်</div>
+    <input type="text" id="joinCode" placeholder="ROOM-XXXXXX  /  TEAM-XXXXXX" style="text-transform:uppercase;">
+    <button class="btn btn-outline" onclick="joinByCode()">🚪 ဝင်ရောက်ရန် တောင်းဆိုမည်</button>
+  </div>
+
+</div>
+
+<!-- ══════════════ BATTLE PAGE ══════════════ -->
+<div id="page-battle" class="page">
+  <div class="card">
+
+    <!-- Room code row -->
+    <div class="rc-row">
+      <div>
+        <div style="font-size:10px;color:var(--sub);">Room</div>
+        <div class="rc-code" id="b_room">---</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="copyRoom()">📋</button>
+        <button class="btn btn-ghost btn-sm" onclick="shareRoom()">📤</button>
+      </div>
+    </div>
+
+    <!-- Countdown -->
+    <div class="cd-bar">
+      <div class="cd-u"><div class="cd-n" id="cd_d">--</div><div class="cd-l">ရက်</div></div>
+      <div class="cd-s">:</div>
+      <div class="cd-u"><div class="cd-n" id="cd_h">--</div><div class="cd-l">နာရီ</div></div>
+      <div class="cd-s">:</div>
+      <div class="cd-u"><div class="cd-n" id="cd_m">--</div><div class="cd-l">မိနစ်</div></div>
+    </div>
+
+    <!-- 1v1 view -->
+    <div id="v1v1">
+      <div class="vs-wrap">
+        <div>
+          <div class="vs-name" id="b_p1n">You</div>
+          <div class="vs-wage" id="b_p1w">0฿</div>
+          <div id="b_p1win" style="display:none;"><span class="win-tag">🏆 WINNING</span></div>
+        </div>
+        <div class="vs-sep">VS</div>
+        <div>
+          <div class="vs-name" id="b_p2n">Opponent</div>
+          <div class="vs-wage" id="b_p2w">0฿</div>
+          <div id="b_p2win" style="display:none;"><span class="win-tag">🏆 WINNING</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team view -->
+    <div id="vteam" style="display:none;">
+      <div class="team-row">
+        <div class="tc tc-a">
+          <div class="tc-lbl" style="color:#3b82f6;">🔵 Team A</div>
+          <div class="tc-wage" id="t_wa">0฿</div>
+          <div class="tc-members" id="t_ma">---</div>
+        </div>
+        <div class="tc tc-b">
+          <div class="tc-lbl" style="color:var(--p2);">🔴 Team B</div>
+          <div class="tc-wage" id="t_wb">0฿</div>
+          <div class="tc-members" id="t_mb">---</div>
+        </div>
+      </div>
+      <div class="slot-grid" id="slotsDiv"></div>
+    </div>
+
+    <!-- HP Bar -->
+    <div class="hp-wrap">
+      <div class="hp-lbls">
+        <span id="hp_l" style="font-weight:700;color:#16a34a;">50%</span>
+        <span>⚔️ Wage HP</span>
+        <span id="hp_r" style="font-weight:700;color:#dc2626;">50%</span>
+      </div>
+      <div class="hp-track">
+        <div id="hpMe"  class="hp-me"  style="width:50%;"></div>
+        <div id="hpOpp" class="hp-opp" style="width:50%;"></div>
+        <div class="hp-mid"></div>
+      </div>
+    </div>
+
+    <!-- Waiting -->
+    <div id="waitDiv" style="display:none;text-align:center;padding:8px 0;">
+      <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div style="font-size:12px;color:var(--sub);" id="waitTxt">ပြိုင်ဘက် ဝင်ရောက်ရန် စောင့်နေသည်...</div>
+    </div>
+
+    <!-- Pending approval -->
+    <div id="pendDiv" style="display:none;text-align:center;padding:10px;background:#fffde7;border-radius:10px;margin-bottom:8px;">
+      <div style="font-size:13px;color:#856404;">⏳ Host ၏ ခွင့်ပြုချက် စောင့်နေသည်...</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="trow">
+      <button class="tab active" id="tabC" onclick="stab('chat')">💬 Chat</button>
+      <button class="tab"        id="tabL" onclick="stab('log')">📋 Log</button>
+    </div>
+
+    <div id="pChat">
+      <div class="chat-box" id="chatBox"></div>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="chatIn" placeholder="Message..." style="flex:1;text-align:left;padding:10px;margin:0;">
+        <button class="btn btn-gold btn-sm" style="min-width:52px;" onclick="sendChat()">ပို့</button>
+      </div>
+    </div>
+    <div id="pLog" style="display:none;"><div class="log-box" id="logBox"></div></div>
+
+    <button class="btn btn-red" onclick="leaveRoom()" style="margin-top:14px;margin-bottom:0;">🏳️ အရှုံးပေး / ထွက်မည်</button>
+  </div>
+</div>
+
+<!-- ══════════════ HISTORY PAGE ══════════════ -->
+<div id="page-history" class="page">
+  <div class="card">
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-n" id="st_w" style="color:var(--win);">0</div><div class="stat-l">Wins</div></div>
+      <div class="stat-box"><div class="stat-n" id="st_l" style="color:var(--lose);">0</div><div class="stat-l">Losses</div></div>
+      <div class="stat-box"><div class="stat-n" id="st_wr">0%</div><div class="stat-l">Win Rate</div></div>
+    </div>
+  </div>
+  <div style="padding:0 14px;">
+    <div style="font-size:13px;font-weight:600;color:var(--sub);margin-bottom:8px;">⚔️ Battle မှတ်တမ်း</div>
+    <div id="histList"></div>
+  </div>
+</div>
+
+<!-- ══════════════ LEADERBOARD PAGE ══════════════ -->
+<div id="page-board" class="page">
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;color:var(--sub);margin-bottom:8px;">🏢 ကုမ္ပဏီ Leaderboard</div>
+    <div style="font-size:11px;background:#f8fafc;border-radius:8px;padding:8px;margin-bottom:12px;color:var(--sub);">
+      Code Group: <span id="lb_grp" style="font-weight:700;color:var(--p1);"></span>
+    </div>
+    <div id="lbList"></div>
+  </div>
+</div>
+
+<!-- ══ BOTTOM NAV ══ -->
+<nav class="bnav">
+  <div class="ni active" id="nav-home"    onclick="gp('home')">    <span class="ni-icon">🏠</span>Home</div>
+  <div class="ni"        id="nav-battle"  onclick="gp('battle')">  <span class="ni-icon">⚔️</span>Battle</div>
+  <div class="ni"        id="nav-history" onclick="gp('history')"> <span class="ni-icon">📋</span>History</div>
+  <div class="ni"        id="nav-board"   onclick="gp('board')">   <span class="ni-icon">🏆</span>Board</div>
+</nav>
 
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyD7T7WZg0fLGTw6ShqDHjOva-btNF6O1AM",
-    authDomain: "seafood-oder.firebaseapp.com",
-    databaseURL: "https://seafood-oder-default-rtdb.firebaseio.com",
-    projectId: "seafood-oder",
-    storageBucket: "seafood-oder.firebasestorage.app",
-    messagingSenderId: "428949391732",
-    appId: "1:428949391732:web:6aa0a31a4f4ba33765c421"
-};
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+// ══ FIREBASE ══
+const firebaseConfig={apiKey:"AIzaSyD7T7WZg0fLGTw6ShqDHjOva-btNF6O1AM",authDomain:"seafood-oder.firebaseapp.com",databaseURL:"https://seafood-oder-default-rtdb.firebaseio.com",projectId:"seafood-oder",storageBucket:"seafood-oder.firebasestorage.app",messagingSenderId:"428949391732",appId:"1:428949391732:web:6aa0a31a4f4ba33765c421"};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
 
-// ─── PROFILE ───
-const profile = JSON.parse(localStorage.getItem('f_prof') || '{}');
-let myId = localStorage.getItem('battle_id_v7');
-if (!myId) {
-    myId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    localStorage.setItem('battle_id_v7', myId);
-}
-document.getElementById('myIdDisplay').innerText = myId;
+// ══ PROFILE (home page format) ══
+const prof=JSON.parse(localStorage.getItem('f_prof')||'{}');
+const myName=prof.name||'Fighter';
+const myCode=String(prof.code||'EMP001');
+let myId=localStorage.getItem('bwid');
+if(!myId){myId=Math.random().toString(36).substring(2,8).toUpperCase();localStorage.setItem('bwid',myId);}
 
-let currentRoom = localStorage.getItem('active_room_id');
-let myRole      = localStorage.getItem('my_role');
-let pendingRoom = null;
-
-// ─── WAGE CALCULATOR — home page (index.html) format အတိုင်း ─────
-// localStorage key : f_recs  (NOT f_records)
-// record fields    : { type:'income'|'expense', amt, date, details:{h,o,e} }
-// profile fields   : { wage: တစ်ရက်နှုန်း, ot: OT rate/hr }
-// income formula   : (h/8 * profile.wage) + (o * profile.ot) + e
-// expense formula  : amt (type==='expense' ဆို နုတ်)
-function calculateWage(days) {
-    const prof = JSON.parse(localStorage.getItem('f_prof') || '{}');
-    const recs = JSON.parse(localStorage.getItem('f_recs')  || '[]');
-
-    const dailyRate = parseFloat(prof.wage || 0);  // e.g. 375
-    const otRate    = parseFloat(prof.ot   || 0);  // e.g. 69
-    const cutoff    = Date.now() - parseInt(days) * 86400000;
-
-    let wageTotal = 0, otCash = 0, extraTotal = 0, expTotal = 0;
-
-    recs.forEach(r => {
-        const ts = new Date(r.date || 0).getTime();
-        if (ts < cutoff) return;
-
-        if (r.type === 'income' && r.details) {
-            const h = parseFloat(r.details.h || 0);
-            const o = parseFloat(r.details.o || 0);
-            const e = parseFloat(r.details.e || 0);
-            wageTotal += (h / 8) * dailyRate;
-            otCash    += o * otRate;
-            extraTotal+= e;
-        } else if (r.type === 'expense') {
-            expTotal  += parseFloat(r.amt || 0);
-        }
-    });
-
-    const total = wageTotal + otCash + extraTotal - expTotal;
-    return Math.round(total);
+// ══ WAGE (exact home page formula: f_recs key, details.h/o/e) ══
+function calcWage(days){
+  const p=JSON.parse(localStorage.getItem('f_prof')||'{}');
+  const recs=JSON.parse(localStorage.getItem('f_recs')||'[]');
+  const dr=parseFloat(p.wage||0), or=parseFloat(p.ot||0);
+  const cut=Date.now()-parseInt(days)*86400000;
+  let w=0,o=0,e=0,x=0;
+  recs.forEach(r=>{
+    const ts=new Date(r.date||0).getTime();
+    if(ts<cut)return;
+    if(r.type==='income'&&r.details){w+=(parseFloat(r.details.h||0)/8)*dr;o+=parseFloat(r.details.o||0)*or;e+=parseFloat(r.details.e||0);}
+    else if(r.type==='expense')x+=parseFloat(r.amt||0);
+  });
+  return Math.round(w+o+e-x);
 }
 
-// ─── INVITE LISTENER ───
-db.ref(`invites/${myId}`).on('value', snap => {
-    if (snap.exists()) {
-        const inv = snap.val();
-        document.getElementById('inviterName').innerText = `${inv.fromName} မှ စိန်ခေါ်မှု!`;
-        document.getElementById('inviteDetail').innerText = `${inv.days} ရက် ပြိုင်ပွဲ`;
-        pendingRoom = inv.roomCode;
-        document.getElementById('notiPop').style.display = 'block';
-    } else {
-        document.getElementById('notiPop').style.display = 'none';
+// ══ STATE ══
+let mode='1v1',period=15,ts=2;
+let curRoom=localStorage.getItem('bw_room');
+let myRole=localStorage.getItem('bw_role');
+let myTeam=myRole?myRole[0]:null;
+let isHost=false,pendRoom=null,pendGuest=null;
+let cdTimer=null,scanner=null,bCfg={};
+
+// ══ INIT ══
+function init(){
+  document.getElementById('myIdDisp').innerText=myId;
+  try{new QRCode(document.getElementById('qrDiv'),{text:myId,width:120,height:120,colorDark:'#1a2a6c'});}catch(e){}
+  refreshWage();
+  db.ref('users/'+myId).update({name:myName,code:myCode,ts:Date.now()});
+  // Invite listener
+  db.ref('invites/'+myId).on('value',s=>{
+    if(s.exists()){
+      const v=s.val();pendRoom=v.roomCode;
+      document.getElementById('notif_who').innerText=v.fromName+' မှ Challenge!';
+      document.getElementById('notif_det').innerText=(v.mode==='team'?'Team':'1v1')+' Battle • '+v.days+' ရက်';
+      document.getElementById('notifBar').style.display='block';
+    }else document.getElementById('notifBar').style.display='none';
+  });
+  // Approve listener
+  db.ref('users/'+myId+'/req').on('value',s=>{
+    if(!s.exists())return;
+    pendGuest=s.val();
+    document.getElementById('appr_name').innerText=pendGuest.name;
+    document.getElementById('appr_wage').innerText='💰 Wage: '+(pendGuest.wage||'--')+'฿';
+    document.getElementById('approveModal').classList.add('show');
+  });
+  // Resume
+  if(curRoom){gp('battle');startListeners(curRoom);}
+  // LB prefix
+  const grp=myCode.length>3?myCode.substring(0,myCode.length-2):'ALL';
+  document.getElementById('lb_grp').innerText=grp+'xx';
+}
+
+function refreshWage(){
+  const w=calcWage(period);
+  document.getElementById('wagePreview').innerText=w+'฿';
+  document.getElementById('wageSub').innerText=period+' ရက် ကာလ';
+  document.getElementById('periodLabel').innerText=period+' ရက်';
+}
+
+// ══ PAGE NAV ══
+function gp(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(e=>e.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.getElementById('nav-'+p).classList.add('active');
+  const tt={home:'⚔️ BATTLE ARENA',battle:'⚔️ LIVE BATTLE',history:'📋 History',board:'🏆 Leaderboard'};
+  document.getElementById('hdr_title').innerText=tt[p]||'⚔️ BATTLE ARENA';
+  document.getElementById('hdr_back').style.display=p==='battle'?'block':'none';
+  if(p==='history')loadHist();
+  if(p==='board')loadLB();
+}
+function onBack(){gp(curRoom?'battle':'home');}
+
+// ══ TOGGLES ══
+function togglePeriod(){period=period===15?30:15;refreshWage();}
+function setMode(m){
+  mode=m;
+  ['1v1','team'].forEach(v=>document.getElementById('m'+v).classList.toggle('active',m===v));
+  document.getElementById('tsRow').style.display=m==='team'?'block':'none';
+  document.getElementById('oppRow').style.display=m==='1v1'?'block':'none';
+  document.getElementById('teamRow').style.display=m==='team'?'block':'none';
+}
+function setTs(s){ts=s;[2,3,4].forEach(v=>document.getElementById('ts'+v).classList.toggle('active',v===s));}
+
+// ══ NEXT SLOT ══
+function nextSlot(slots,cfg){
+  const sz=cfg.teamSize||1;
+  for(const t of['A','B']){for(let i=1;i<=sz;i++){if(!slots[t+i])return t+i;}}
+  return null;
+}
+
+// ══ 1v1 CHALLENGE ══
+async function send1v1(){
+  const tid=document.getElementById('oppId').value.trim().toUpperCase();
+  if(!tid||tid===myId){toast('ID မမှန်ပါ');return;}
+  const wage=calcWage(period);
+  const rc='ROOM-'+Date.now().toString().slice(-6);
+  curRoom=rc;myRole='A1';myTeam='A';isHost=true;
+  localStorage.setItem('bw_room',rc);localStorage.setItem('bw_role','A1');
+  await db.ref('rooms/'+rc).set({config:{mode:'1v1',days:period,start:Date.now(),teamSize:1,hostId:myId},slots:{A1:{battleId:myId,name:myName,code:myCode,wage}}});
+  await db.ref('invites/'+tid).set({fromName:myName,roomCode:rc,days:period,mode:'1v1'});
+  addLog(rc,'sys','⚔️',myName+' မှ 1v1 Battle ဖန်တီးသည် ('+period+' ရက်)');
+  toast('✅ Challenge ပို့ပြီ!');gp('battle');startListeners(rc);
+}
+
+// ══ TEAM CREATE ══
+async function createTeam(){
+  const wage=calcWage(period);
+  const rc='TEAM-'+Date.now().toString().slice(-6);
+  curRoom=rc;myRole='A1';myTeam='A';isHost=true;
+  localStorage.setItem('bw_room',rc);localStorage.setItem('bw_role','A1');
+  await db.ref('rooms/'+rc).set({config:{mode:'team',days:period,start:Date.now(),teamSize:ts,hostId:myId},slots:{A1:{battleId:myId,name:myName,code:myCode,wage}}});
+  addLog(rc,'sys','👥',myName+' မှ '+ts+'v'+ts+' Team Battle ဖန်တီးသည်');
+  toast('✅ Team Room ပြီ! Code မျှဝေပါ');gp('battle');startListeners(rc);
+}
+
+// ══ JOIN BY CODE ══
+async function joinByCode(){
+  const code=document.getElementById('joinCode').value.trim().toUpperCase();
+  if(!code){toast('Room Code ရိုက်ပါ');return;}
+  const snap=await db.ref('rooms/'+code).once('value');
+  if(!snap.exists()){toast('❌ Room မတွေ့ပါ');return;}
+  const room=snap.val(),cfg=room.config;
+  const slots=room.slots||{};
+  const filled=Object.keys(slots).length;
+  const total=(cfg.mode==='team'?cfg.teamSize*2:2);
+  if(filled>=total){toast('⚠️ Room ပြည့်နေပြီ');return;}
+  if(cfg.status==='finished'){toast('⚠️ ပြိုင်ပွဲ ပြီးပြီ');return;}
+  const wage=calcWage(cfg.days);
+  const slot=nextSlot(slots,cfg);
+  if(!slot){toast('⚠️ Slot မရှိပါ');return;}
+  curRoom=code;myRole=slot;myTeam=slot[0];isHost=false;
+  localStorage.setItem('bw_room',code);localStorage.setItem('bw_role',slot);
+  period=cfg.days;
+  if(cfg.mode==='1v1'){
+    // Request approval from host
+    await db.ref('rooms/'+code+'/pendingGuest').set({battleId:myId,name:myName,code:myCode,wage,slotKey:slot});
+    await db.ref('users/'+cfg.hostId+'/req').set({roomId:code,name:myName,wage});
+    addLog(code,'sys','🔔',myName+' မှ ဝင်ရောက်ရန် တောင်းဆိုသည်');
+    gp('battle');startListeners(code);
+    document.getElementById('pendDiv').style.display='block';
+  }else{
+    // Team: direct join
+    await db.ref('rooms/'+code+'/slots/'+slot).set({battleId:myId,name:myName,code:myCode,wage});
+    addLog(code,'sys','✅',myName+' Team '+slot[0]+' သို့ ဝင်ရောက်သည်');
+    gp('battle');startListeners(code);
+    // Check if team is full
+    const sn2=await db.ref('rooms/'+code+'/slots').once('value');
+    if(Object.keys(sn2.val()||{}).length>=total){
+      await db.ref('rooms/'+code+'/config/status').set('active');
+      addChatSys(code,'⚔️ Team Battle စတင်သည်!');
     }
-});
-
-// ─── SEND CHALLENGE ───
-async function sendChallenge() {
-    const tid = document.getElementById('targetIdInput').value.trim().toUpperCase();
-    if (!tid || tid === myId) { showToast('ID မှားယွင်းနေပါသည်'); return; }
-    const days  = document.getElementById('duration').value;
-    const rCode = 'ROOM-' + Date.now().toString().slice(-6);
-    const wage  = calculateWage(days);
-
-    currentRoom = rCode; myRole = 'p1';
-    localStorage.setItem('active_room_id', rCode);
-    localStorage.setItem('my_role', 'p1');
-
-    await db.ref(`rooms/${rCode}`).set({
-        config: { days, start: Date.now() },
-        p1: { name: profile.name || 'Player', wage, id: myId }
-    });
-    await db.ref(`invites/${tid}`).set({ fromName: profile.name || 'Player', roomCode: rCode, days });
-    addLog('sys', '⚔️', `${profile.name || 'Player'} မှ ${days} ရက် Battle ဖန်တီးသည်`);
-    showToast('✅ စိန်ခေါ်မှု ပို့ပြီ!');
-    startBattleUI();
+  }
 }
 
-// ─── ACCEPT INVITE ───
-async function acceptInvite() {
-    const snap = await db.ref(`rooms/${pendingRoom}`).once('value');
-    if (!snap.exists()) { showToast('ပွဲမရှိတော့ပါ'); return; }
-    const roomData = snap.val();
-    const days = roomData.config.days;
-    const wage = calculateWage(days);
-
-    currentRoom = pendingRoom; myRole = 'p2';
-    localStorage.setItem('active_room_id', pendingRoom);
-    localStorage.setItem('my_role', 'p2');
-
-    await db.ref(`rooms/${pendingRoom}/p2`).set({ name: profile.name || 'Player', wage, id: myId });
-    await db.ref(`invites/${myId}`).remove();
-    addLog('sys', '✅', `${profile.name || 'Player'} Battle ဝင်ရောက်သည်`);
-    document.getElementById('notiPop').style.display = 'none';
-    startBattleUI();
+// ══ ACCEPT / REJECT INVITE ══
+function closeNotif(){document.getElementById('notifBar').style.display='none';}
+async function acceptInvite(){
+  closeNotif();
+  const snap=await db.ref('rooms/'+pendRoom).once('value');
+  if(!snap.exists()){toast('Room မတွေ့ပါ');return;}
+  const cfg=snap.val().config;
+  const wage=calcWage(cfg.days);
+  const slots=snap.val().slots||{};
+  const slot=nextSlot(slots,cfg);
+  curRoom=pendRoom;myRole=slot;myTeam=slot[0];isHost=false;
+  localStorage.setItem('bw_room',pendRoom);localStorage.setItem('bw_role',slot);
+  period=cfg.days;
+  await db.ref('rooms/'+pendRoom+'/slots/'+slot).set({battleId:myId,name:myName,code:myCode,wage});
+  await db.ref('invites/'+myId).remove();
+  addLog(pendRoom,'sys','✅',myName+' Battle ဝင်ရောက်သည်!');
+  addChatSys(pendRoom,'⚔️ Battle စတင်သည်!');
+  gp('battle');startListeners(pendRoom);
 }
 
-function rejectInvite() { db.ref(`invites/${myId}`).remove(); }
+// ══ APPROVE GUEST ══
+async function approveGuest(){
+  document.getElementById('approveModal').classList.remove('show');
+  if(!pendGuest||!curRoom)return;
+  const sn=await db.ref('rooms/'+curRoom+'/pendingGuest').once('value');
+  if(!sn.exists())return;
+  const g=sn.val();
+  await db.ref('rooms/'+curRoom+'/slots/'+g.slotKey).set({battleId:g.battleId,name:g.name,code:g.code,wage:g.wage});
+  await db.ref('rooms/'+curRoom+'/config/status').set('active');
+  await db.ref('rooms/'+curRoom+'/pendingGuest').remove();
+  await db.ref('users/'+myId+'/req').remove();
+  addLog(curRoom,'sys','✅',g.name+' ကို Battle ထဲ ခွင့်ပြုသည်');
+  addChatSys(curRoom,'⚔️ '+g.name+' ဝင်ရောက်လိုက်သည်!');
+}
+async function rejectGuest(){
+  document.getElementById('approveModal').classList.remove('show');
+  if(curRoom){await db.ref('rooms/'+curRoom+'/pendingGuest').remove();}
+  await db.ref('users/'+myId+'/req').remove();
+}
 
-// ─── START BATTLE UI ───
-function startBattleUI() {
-    document.getElementById('setupArea').style.display  = 'none';
-    document.getElementById('battleArea').style.display = 'block';
+// ══ BATTLE LISTENERS ══
+function startListeners(rId){
+  document.getElementById('b_room').innerText=rId;
+  document.getElementById('waitDiv').style.display='block';
+  // Config
+  db.ref('rooms/'+rId+'/config').on('value',s=>{
+    bCfg=s.val()||{};
+    period=bCfg.days||15;
+    document.getElementById('b_room').innerText=rId+' • '+period+'ရက်';
+    if(bCfg.start) startCD(bCfg.start,period);
+    const isTeam=bCfg.mode==='team';
+    document.getElementById('v1v1').style.display=isTeam?'none':'block';
+    document.getElementById('vteam').style.display=isTeam?'block':'none';
+  });
+  // Slots
+  db.ref('rooms/'+rId+'/slots').on('value',s=>{
+    const slots=s.val()||{};
+    updateDisplay(slots);
+  });
+  // Chat
+  db.ref('rooms/'+rId+'/chats').on('child_added',s=>{
+    const m=s.val();if(!m)return;
+    if(m.sys){sysMsg(m.text);return;}
+    const el=document.createElement('div');
+    el.className='cm '+(m.sid===myId?'cm-me':'cm-opp');
+    el.innerHTML='<div class="cm-name">'+m.name+'</div>'+m.text;
+    document.getElementById('chatBox').appendChild(el);
+    document.getElementById('chatBox').scrollTop=9999;
+  });
+  // Log
+  db.ref('rooms/'+rId+'/logs').orderByChild('ts').limitToLast(60).on('child_added',s=>{
+    const l=s.val();if(!l)return;
+    const el=document.createElement('div');
+    const cls=l.type==='sys'?'lsys':(l.who===myId?'lme':'lopp');
+    el.className='li '+cls;
+    const t=new Date(l.ts).toLocaleTimeString('my-MM',{hour:'2-digit',minute:'2-digit'});
+    el.innerHTML='<span class="li-icon">'+l.icon+'</span><div class="li-txt">'+l.text+'<div class="li-t">'+t+'</div></div>';
+    document.getElementById('logBox').prepend(el);
+  });
+  // Result
+  db.ref('rooms/'+rId+'/result').on('value',s=>{if(s.exists())showVic(s.val());});
+  // Pending
+  db.ref('rooms/'+rId+'/pendingGuest').on('value',s=>{
+    if(!s.exists())document.getElementById('pendDiv').style.display='none';
+  });
+}
 
-    // မိမိ wage ကို Firebase သို့ update
-    if (currentRoom && myRole) {
-        const days = 15; // default; firebase မှ config ဖတ်မည်
-        db.ref(`rooms/${currentRoom}/config/days`).once('value').then(s => {
-            const d = s.val() || 15;
-            db.ref(`rooms/${currentRoom}/${myRole}/wage`).set(calculateWage(d));
-        });
+function updateDisplay(slots){
+  const cfg=bCfg;
+  if(!cfg||!cfg.mode)return;
+  const keysA=Object.keys(slots).filter(k=>k[0]==='A');
+  const keysB=Object.keys(slots).filter(k=>k[0]==='B');
+  const wA=keysA.reduce((s,k)=>s+(slots[k].wage||0),0);
+  const wB=keysB.reduce((s,k)=>s+(slots[k].wage||0),0);
+  const sz=cfg.teamSize||1;
+  const total=cfg.mode==='team'?sz*2:2;
+  const filled=Object.keys(slots).length;
+
+  if(cfg.mode==='1v1'){
+    const me=slots[myRole]||{};
+    const oppKey=myRole&&myRole[0]==='A'?'B1':'A1';
+    const opp=slots[oppKey]||{};
+    document.getElementById('b_p1n').innerText=me.name||myName;
+    document.getElementById('b_p1w').innerText=(me.wage||0)+'฿';
+    document.getElementById('b_p2n').innerText=opp.name||'⏳ စောင့်နေဆဲ';
+    document.getElementById('b_p2w').innerText=(opp.wage||0)+'฿';
+    const mw=me.wage||0,ow=opp.wage||0;
+    document.getElementById('b_p1win').style.display=mw>ow?'block':'none';
+    document.getElementById('b_p2win').style.display=ow>mw?'block':'none';
+    setHP(mw,ow);
+  }else{
+    document.getElementById('t_wa').innerText=wA+'฿';
+    document.getElementById('t_wb').innerText=wB+'฿';
+    document.getElementById('t_ma').innerText=keysA.map(k=>slots[k].name).join('\n')||'---';
+    document.getElementById('t_mb').innerText=keysB.map(k=>slots[k].name).join('\n')||'---';
+    // Slots grid
+    let h='';
+    for(let i=1;i<=sz;i++){
+      const a=slots['A'+i],b=slots['B'+i];
+      h+='<div class="slot '+(a?'filled':'empty')+'">'+(a?'👤 '+a.name:'⬜ A'+i)+'</div>';
+      h+='<div class="slot '+(b?'filled':'empty')+'">'+(b?'👤 '+b.name:'⬜ B'+i)+'</div>';
     }
-
-    // PLAYERS LISTENER
-    db.ref(`rooms/${currentRoom}`).on('value', snap => {
-        const data = snap.val();
-        if (!data) { handleExit(); return; }
-
-        const p1 = data.p1 || { wage: 0, name: 'P1' };
-        const p2 = data.p2 || { wage: 0, name: 'စောင့်နေဆဲ...' };
-
-        const myW  = myRole === 'p1' ? (p1.wage || 0) : (p2.wage || 0);
-        const oppW = myRole === 'p1' ? (p2.wage || 0) : (p1.wage || 0);
-
-        document.getElementById('p1Name').innerText  = myRole === 'p1' ? (p1.name || 'You') : (p2.name || 'You');
-        document.getElementById('p2Name').innerText  = myRole === 'p1' ? (p2.name || 'Opponent') : (p1.name || 'Opponent');
-        document.getElementById('p1Wage').innerText  = myW  + '฿';
-        document.getElementById('p2Wage').innerText  = oppW + '฿';
-
-        // HP BAR — နှစ်ဖက်ပေါင်းဆုံမှတ် 50/50 မှ အလျားဆွဲသည်
-        const total = Math.abs(myW) + Math.abs(oppW);
-        let mePct = 50, oppPct = 50;
-        if (total > 0) {
-            mePct  = Math.round((myW  / total) * 100);
-            oppPct = 100 - mePct;
-        }
-        document.getElementById('hpMe').style.width  = mePct  + '%';
-        document.getElementById('hpOpp').style.width = oppPct + '%';
-
-        // WINNING TAG
-        document.getElementById('p1Win').style.display = myW  > oppW ? 'inline-block' : 'none';
-        document.getElementById('p2Win').style.display = oppW > myW  ? 'inline-block' : 'none';
-    });
-
-    // CHAT LISTENER
-    db.ref(`rooms/${currentRoom}/chats`).on('child_added', s => {
-        const c = s.val();
-        const div = document.createElement('div');
-        const isMe = c.id === myId;
-        div.className = isMe ? 'chat-msg-me' : 'chat-msg-opp';
-        div.innerHTML = `<b>${c.name}:</b> ${c.text}`;
-        document.getElementById('chatBox').appendChild(div);
-        document.getElementById('chatBox').scrollTop = 9999;
-    });
-
-    // LOG LISTENER
-    db.ref(`rooms/${currentRoom}/logs`).orderByChild('ts').limitToLast(40).on('child_added', s => {
-        const l = s.val();
-        const el  = document.createElement('div');
-        const who = l.who === myId ? 'log-me' : l.type === 'sys' ? 'log-sys' : 'log-opp';
-        el.className = 'log-entry ' + who;
-        const t = new Date(l.ts).toLocaleTimeString('my-MM', { hour:'2-digit', minute:'2-digit' });
-        el.innerHTML = `<span class="log-icon">${l.icon}</span><div class="log-text">${l.text}<div class="log-time">${t}</div></div>`;
-        document.getElementById('logBox').prepend(el);
-    });
+    document.getElementById('slotsDiv').innerHTML=h;
+    const myTW=myTeam==='A'?wA:wB,oppTW=myTeam==='A'?wB:wA;
+    setHP(myTW,oppTW);
+  }
+  const waiting=filled<total;
+  document.getElementById('waitDiv').style.display=waiting?'block':'none';
+  if(waiting)document.getElementById('waitTxt').innerText=filled+'/'+total+' ဦး ဝင်ပြီ — ကျန် '+(total-filled)+' ဦး...';
 }
 
-// ─── ADD LOG ───
-function addLog(type, icon, text) {
-    if (!currentRoom) return;
-    db.ref(`rooms/${currentRoom}/logs`).push({ who: myId, type, icon, text, ts: Date.now() });
+function setHP(me,opp){
+  const tot=me+opp;
+  const mp=tot>0?Math.round(me/tot*100):50,op=100-mp;
+  document.getElementById('hpMe').style.width=mp+'%';
+  document.getElementById('hpOpp').style.width=op+'%';
+  document.getElementById('hp_l').innerText=mp+'%';
+  document.getElementById('hp_r').innerText=op+'%';
 }
 
-// ─── CHAT ───
-function sendChat() {
-    const txt = document.getElementById('chatInput').value.trim();
-    if (!txt || !currentRoom) return;
-    db.ref(`rooms/${currentRoom}/chats`).push({ id: myId, name: profile.name || 'Player', text: txt });
-    addLog('me', '💬', `${profile.name || 'Player'}: ${txt}`);
-    document.getElementById('chatInput').value = '';
-}
-document.getElementById('chatInput').addEventListener('keypress', e => { if(e.key === 'Enter') sendChat(); });
-
-// ─── TABS ───
-function switchTab(t) {
-    document.getElementById('panelChat').style.display = t === 'chat' ? 'block' : 'none';
-    document.getElementById('panelLog').style.display  = t === 'log'  ? 'block' : 'none';
-    document.getElementById('tabChat').classList.toggle('active', t === 'chat');
-    document.getElementById('tabLog').classList.toggle('active',  t === 'log');
+// ══ COUNTDOWN ══
+function startCD(start,days){
+  if(cdTimer)clearInterval(cdTimer);
+  const end=start+days*86400000;
+  function tick(){
+    const r=end-Date.now();
+    if(r<=0){document.getElementById('cd_d').innerText='0';document.getElementById('cd_h').innerText='00';document.getElementById('cd_m').innerText='00';clearInterval(cdTimer);return;}
+    document.getElementById('cd_d').innerText=Math.floor(r/86400000);
+    document.getElementById('cd_h').innerText=String(Math.floor((r%86400000)/3600000)).padStart(2,'0');
+    document.getElementById('cd_m').innerText=String(Math.floor((r%3600000)/60000)).padStart(2,'0');
+  }
+  tick();cdTimer=setInterval(tick,60000);
 }
 
-// ─── SURRENDER ───
-function surrender() {
-    if (!confirm('ထွက်မှာ သေချာလား?')) return;
-    addLog('sys', '🏳️', `${profile.name || 'Player'} အရှုံးပေးသည်`);
-    db.ref(`rooms/${currentRoom}`).remove();
-    handleExit();
+// ══ CHAT / LOG ══
+function sendChat(){
+  const txt=document.getElementById('chatIn').value.trim();
+  if(!txt||!curRoom)return;
+  db.ref('rooms/'+curRoom+'/chats').push({sid:myId,name:myName,text:txt,ts:Date.now()});
+  addLog(curRoom,'me','💬',myName+': '+txt);
+  document.getElementById('chatIn').value='';
 }
-function handleExit() {
-    localStorage.removeItem('active_room_id');
-    localStorage.removeItem('my_role');
-    location.reload();
+document.getElementById('chatIn').addEventListener('keypress',e=>{if(e.key==='Enter')sendChat();});
+
+function addLog(rId,type,icon,text){db.ref('rooms/'+rId+'/logs').push({who:myId,type,icon,text,ts:Date.now()});}
+function addChatSys(rId,text){db.ref('rooms/'+rId+'/chats').push({sys:true,text,ts:Date.now()});}
+function sysMsg(text){const el=document.createElement('div');el.className='cm cm-sys';el.innerText=text;document.getElementById('chatBox').appendChild(el);document.getElementById('chatBox').scrollTop=9999;}
+
+function stab(t){
+  document.getElementById('pChat').style.display=t==='chat'?'block':'none';
+  document.getElementById('pLog').style.display=t==='log'?'block':'none';
+  document.getElementById('tabC').classList.toggle('active',t==='chat');
+  document.getElementById('tabL').classList.toggle('active',t==='log');
 }
 
-// ─── HELPERS ───
-function copyMyId() {
-    navigator.clipboard ? navigator.clipboard.writeText(myId).then(() => showToast('✅ ID ကူးပြီ!'))
-                        : showToast(myId);
+// ══ LEAVE ══
+async function leaveRoom(){
+  if(!confirm('ထွက်မှာ သေချာပါသလား?'))return;
+  if(curRoom){
+    addLog(curRoom,'sys','🏳️',myName+' အရှုံးပေးသည်');
+    const sn=await db.ref('rooms/'+curRoom+'/slots').once('value');
+    const slots=sn.val()||{};
+    const oppRole=myRole&&myRole[0]==='A'?'B1':'A1';
+    const wA=Object.keys(slots).filter(k=>k[0]==='A').reduce((s,k)=>s+(slots[k].wage||0),0);
+    const wB=Object.keys(slots).filter(k=>k[0]==='B').reduce((s,k)=>s+(slots[k].wage||0),0);
+    await db.ref('rooms/'+curRoom+'/result').set({winner:myTeam==='A'?'B':'A',aWage:wA,bWage:wB,loser:myName,surrendered:true});
+  }
+  cleanup();
 }
-function goBack() { window.history.back(); }
 
-let toastT;
-function showToast(msg) {
-    const el = document.getElementById('toast');
-    el.innerText = msg; el.classList.add('show');
-    clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2500);
+function cleanup(){
+  if(cdTimer)clearInterval(cdTimer);
+  curRoom=null;myRole=null;myTeam=null;isHost=false;
+  localStorage.removeItem('bw_room');localStorage.removeItem('bw_role');
+  document.getElementById('chatBox').innerHTML='';
+  document.getElementById('logBox').innerHTML='';
+  gp('home');
 }
 
-// ─── AUTO RESUME ───
-if (currentRoom) startBattleUI();
+// ══ VICTORY ══
+function showVic(res){
+  const won=res.winner===myTeam;
+  const draw=!res.winner||res.winner==='draw';
+  document.getElementById('vic_emoji').innerText=draw?'🤝':(won?'🏆':'💔');
+  document.getElementById('vic_title').innerText=draw?'သရေကျသည်!':(won?'🎉 အနိုင်ရသည်!':'😔 ရှုံးသည်');
+  document.getElementById('vic_score').innerText=(res.aWage||0)+'฿  :  '+(res.bWage||0)+'฿';
+  document.getElementById('vic_score').style.color=won?'var(--win)':'var(--lose)';
+  document.getElementById('vic_detail').innerText=(res.surrendered?'ပြိုင်ဘက် '+res.loser+' အရှုံးပေးသည်':period+' ရက် ပြိုင်ပွဲ ပြီးဆုံးသည်');
+  document.getElementById('vicOverlay').style.display='flex';
+  if(won) spawnConfetti();
+  // Save history
+  const h=JSON.parse(localStorage.getItem('bwhist')||'[]');
+  h.unshift({ts:Date.now(),date:new Date().toLocaleDateString(),result:draw?'draw':(won?'win':'lose'),opp:won?(res.loser||'Opponent'):'Opponent',myW:myTeam==='A'?res.aWage:res.bWage,oppW:myTeam==='A'?res.bWage:res.aWage,days:period});
+  localStorage.setItem('bwhist',JSON.stringify(h.slice(0,50)));
+  // Leaderboard
+  const grp=myCode.length>3?myCode.substring(0,myCode.length-2):'ALL';
+  db.ref('leaderboard/'+grp+'/'+myId).transaction(d=>{
+    d=d||{name:myName,code:myCode,wins:0,battles:0,top:0};
+    d.name=myName;d.code=myCode;d.battles=(d.battles||0)+1;
+    if(won)d.wins=(d.wins||0)+1;
+    const mw=myTeam==='A'?res.aWage:res.bWage;
+    d.top=Math.max(d.top||0,mw||0);
+    return d;
+  });
+}
+
+function spawnConfetti(){
+  const c=document.getElementById('confContainer');c.innerHTML='';
+  const colors=['#ffd700','#ff6b6b','#4ecdc4','#45b7d1','#f9ca24','#6c5ce7'];
+  for(let i=0;i<25;i++){
+    const el=document.createElement('div');el.className='conf';
+    el.style.cssText='left:'+Math.random()*100+'%;animation-delay:'+Math.random()*2+'s;animation-duration:'+(2+Math.random()*2)+'s;background:'+colors[Math.floor(Math.random()*colors.length)]+';border-radius:'+(Math.random()>0.5?'50%':'2px')+';';
+    c.appendChild(el);
+  }
+}
+
+function closeVictory(){document.getElementById('vicOverlay').style.display='none';cleanup();}
+function shareResult(){
+  const h=JSON.parse(localStorage.getItem('bwhist')||'[]');
+  if(!h.length)return;
+  const r=h[0];
+  const txt='⚔️ Battle Wage Result\n'+(r.result==='win'?'🏆 WIN':'💔 LOSE')+' vs '+r.opp+'\n'+r.myW+'฿ vs '+r.oppW+'฿\n'+r.days+' ရက် ပြိုင်ပွဲ\nID: '+myId;
+  if(navigator.share)navigator.share({text:txt});
+  else{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('✅ Result ကူးပြီ!');}
+}
+
+// ══ ROOM SHARE ══
+function copyRoom(){if(!curRoom)return;const ta=document.createElement('textarea');ta.value=curRoom;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('✅ Room Code ကူးပြီ!');}
+function shareRoom(){if(!curRoom)return;const txt='⚔️ Battle Wage\nRoom: '+curRoom+'\nCode ကော်ပီပြီး Join ဝင်ပါ';if(navigator.share)navigator.share({text:txt});else copyRoom();}
+
+// ══ QR SCAN ══
+function openScan(){
+  document.getElementById('scanModal').style.display='flex';
+  scanner=new Html5Qrcode('reader');
+  scanner.start({facingMode:'environment'},{fps:10,qrbox:220},id=>{
+    stopCam();
+    document.getElementById('oppId').value=id;
+    document.getElementById('scanModal').style.display='none';
+    toast('✅ Scanned: '+id);
+  }).catch(()=>{});
+}
+function stopCam(){if(scanner){try{scanner.stop();}catch(e){}scanner=null;}}
+function closeScan(){stopCam();document.getElementById('scanModal').style.display='none';}
+function scanGallery(el){
+  if(!el.files[0])return;
+  stopCam();
+  const qr=new Html5Qrcode('reader');
+  qr.scanFile(el.files[0],true).then(id=>{
+    document.getElementById('oppId').value=id;
+    document.getElementById('scanModal').style.display='none';
+    toast('✅ Gallery Scan ပြီ: '+id);
+  }).catch(()=>toast('❌ QR မတွေ့ပါ'));
+}
+
+// ══ COPY ID ══
+function copyId(){const ta=document.createElement('textarea');ta.value=myId;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('✅ Battle ID ကူးပြီ!');}
+function shareId(){const txt='⚔️ Battle Wage Arena\nMy Battle ID: '+myId;if(navigator.share)navigator.share({text:txt});else copyId();}
+
+// ══ HISTORY ══
+function loadHist(){
+  const h=JSON.parse(localStorage.getItem('bwhist')||'[]');
+  const w=h.filter(x=>x.result==='win').length,l=h.filter(x=>x.result==='lose').length;
+  document.getElementById('st_w').innerText=w;
+  document.getElementById('st_l').innerText=l;
+  document.getElementById('st_wr').innerText=h.length>0?Math.round(w/h.length*100)+'%':'0%';
+  const el=document.getElementById('histList');
+  if(!h.length){el.innerHTML='<div style="text-align:center;color:var(--sub);padding:20px;">မှတ်တမ်း မရှိသေးပါ</div>';return;}
+  const emoji={win:'🏆',lose:'💔',draw:'🤝'};
+  el.innerHTML=h.slice(0,30).map(r=>`
+    <div class="hi h${r.result}">
+      <div>
+        <div style="font-size:14px;font-weight:700;">${emoji[r.result]||'⚔️'} vs ${r.opp}</div>
+        <div style="font-size:11px;color:var(--sub);">${r.date} • ${r.days}ရက် • ${r.myW}฿ vs ${r.oppW}฿</div>
+      </div>
+      <span class="hbadge">${r.result.toUpperCase()}</span>
+    </div>`).join('');
+}
+
+// ══ LEADERBOARD ══
+function loadLB(){
+  const grp=myCode.length>3?myCode.substring(0,myCode.length-2):'ALL';
+  const el=document.getElementById('lbList');
+  el.innerHTML='<div style="text-align:center;color:var(--sub);padding:16px;">Loading...</div>';
+  db.ref('leaderboard/'+grp).orderByChild('wins').limitToLast(20).once('value',s=>{
+    const d=s.val();
+    if(!d){el.innerHTML='<div style="text-align:center;color:var(--sub);padding:20px;">ဒေတာ မရှိသေးပါ</div>';return;}
+    const list=Object.entries(d).sort((a,b)=>(b[1].wins||0)-(a[1].wins||0));
+    const ri=['🥇','🥈','🥉'];
+    const bc=['#d4af37','#94a3b8','#cd7f32'];
+    el.innerHTML=list.map(([id,v],i)=>`
+      <div class="lb-item" style="border-left-color:${bc[i]||'var(--border)'};">
+        <div class="lb-rank">${ri[i]||(i+1)}</div>
+        <div class="lb-info">
+          <div class="lb-name">${v.name}${id===myId?' <span style="color:var(--p2);font-size:11px;">(You)</span>':''}</div>
+          <div class="lb-sub">⚔️ ${v.battles||0} Battles · 🏆 ${v.wins||0} Wins</div>
+        </div>
+        <div class="lb-w">${v.top||0}฿</div>
+      </div>`).join('');
+  });
+}
+
+// ══ TOAST ══
+let tT;
+function toast(m){const el=document.getElementById('toast');el.innerText=m;el.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>el.classList.remove('show'),2500);}
+
+// ══ BOOT ══
+init();
 </script>
 </body>
 </html>
