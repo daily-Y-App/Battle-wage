@@ -22,6 +22,8 @@ body{font-family:'Segoe UI',-apple-system,sans-serif;background:var(--bg);color:
 .hdr-left{display:flex;align-items:center;gap:10px;}
 .hdr h2{font-size:17px;font-weight:800;letter-spacing:1px;}
 .hdr-sub{font-size:10px;opacity:.7;}
+.battle-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.2);font-size:24px;overflow:hidden;border:1px solid rgba(255,255,255,.35);}
+.battle-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
 .back-btn{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0 8px 0 0;}
 
 /* ─ NAV ─ */
@@ -254,7 +256,7 @@ input[type=text]:focus,select:focus{border-color:var(--p1);}
       <div class="hdr-sub" id="hdr_sub"></div>
     </div>
   </div>
-  <div id="hdr_right"></div>
+  <div id="hdr_right"><div id="battleAvatar" class="battle-avatar">👤</div></div>
 </div>
 
 <!-- ══════════════ HOME PAGE ══════════════ -->
@@ -473,8 +475,11 @@ const db=firebase.database();
 
 // ══ PROFILE (home page format) ══
 const prof=JSON.parse(localStorage.getItem('f_prof')||'{}');
+const profileCodeFromUrl=new URLSearchParams(location.search).get('code');
+if(profileCodeFromUrl) prof.code=profileCodeFromUrl;
 const myName=prof.name||'Fighter';
 const myCode=String(prof.code||'EMP001');
+let myAvatar=prof.avatar||prof.av||'👤';
 let myId=localStorage.getItem('bwid');
 if(!myId){myId=Math.random().toString(36).substring(2,8).toUpperCase();localStorage.setItem('bwid',myId);}
 let sharedRecords=JSON.parse(localStorage.getItem('f_recs')||'[]');
@@ -495,6 +500,12 @@ function calcWage(days){
   return Math.round(w+o+e-x);
 }
 
+function renderBattleAvatar(imageUrl){
+  const el=document.getElementById('battleAvatar');
+  if(!el)return;
+  el.innerHTML=imageUrl?`<img src="${imageUrl}" alt="Profile photo">`:myAvatar;
+}
+
 // ══ STATE ══
 let mode='1v1',period=15,ts=2;
 let curRoom=localStorage.getItem('bw_room');
@@ -506,10 +517,15 @@ let cdTimer=null,scanner=null,bCfg={};
 // ══ INIT ══
 function init(){
   document.getElementById('myIdDisp').innerText=myId;
+  renderBattleAvatar();
   try{new QRCode(document.getElementById('qrDiv'),{text:myId,width:120,height:120,colorDark:'#1a2a6c'});}catch(e){}
   refreshWage();
   db.ref('users/'+myCode).on('value',s=>{
     const data=s.val();
+    if(data&&data.profile){
+      myAvatar=data.profile.avatar||data.profile.av||'👤';
+      renderBattleAvatar(data.profile.avatarMode==='image' ? data.profile.avatarUrl : '');
+    }
     if(data&&data.records){
       sharedRecords=Object.values(data.records);
       localStorage.setItem('f_recs',JSON.stringify(sharedRecords));
