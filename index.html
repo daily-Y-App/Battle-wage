@@ -477,11 +477,12 @@ const myName=prof.name||'Fighter';
 const myCode=String(prof.code||'EMP001');
 let myId=localStorage.getItem('bwid');
 if(!myId){myId=Math.random().toString(36).substring(2,8).toUpperCase();localStorage.setItem('bwid',myId);}
+let sharedRecords=JSON.parse(localStorage.getItem('f_recs')||'[]');
 
 // ══ WAGE (exact home page formula: f_recs key, details.h/o/e) ══
 function calcWage(days){
   const p=JSON.parse(localStorage.getItem('f_prof')||'{}');
-  const recs=JSON.parse(localStorage.getItem('f_recs')||'[]');
+  const recs=sharedRecords;
   const dr=parseFloat(p.wage||0), or=parseFloat(p.ot||0);
   const cut=Date.now()-parseInt(days)*86400000;
   let w=0,o=0,e=0,x=0;
@@ -507,6 +508,14 @@ function init(){
   document.getElementById('myIdDisp').innerText=myId;
   try{new QRCode(document.getElementById('qrDiv'),{text:myId,width:120,height:120,colorDark:'#1a2a6c'});}catch(e){}
   refreshWage();
+  db.ref('users/'+myCode).on('value',s=>{
+    const data=s.val();
+    if(data&&data.records){
+      sharedRecords=Object.values(data.records);
+      localStorage.setItem('f_recs',JSON.stringify(sharedRecords));
+      refreshWage();
+    }
+  });
   db.ref('users/'+myId).update({name:myName,code:myCode,ts:Date.now()});
   // Invite listener
   db.ref('invites/'+myId).on('value',s=>{
